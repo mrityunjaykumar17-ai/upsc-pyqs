@@ -1,33 +1,18 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { getPaper, type Subject } from "../data/pyq";
 import { Breadcrumbs, SiteHeader } from "../components/SiteHeader";
 
 export const Route = createFileRoute("/gs/$paper/")({
+  loader: ({ params }) => {
+    const paper = getPaper(params.paper);
+    if (!paper) throw notFound();
+    return { paper };
+  },
   component: PaperIndex,
 });
 
 function PaperIndex() {
-  const { paper } = Route.useRouteContext({
-    select: () => ({ paper: null }),
-  }) as { paper: null };
-  // Use parent loader data via route match
-  const parent = Route.useParentMatches ? undefined : undefined;
-  void parent;
-  void paper;
-  return <PaperIndexInner />;
-}
-
-function PaperIndexInner() {
-  const { paper: paperData } = (Route as unknown as { useRouteContext: () => unknown });
-  void paperData;
-  // Simpler: read params and reload
-  return <PaperPageFromParams />;
-}
-
-function PaperPageFromParams() {
-  const params = Route.useParams();
-  const paper = getPaper(params.paper);
-  if (!paper) return null;
+  const { paper } = Route.useLoaderData();
 
   return (
     <div className="min-h-screen bg-background">
