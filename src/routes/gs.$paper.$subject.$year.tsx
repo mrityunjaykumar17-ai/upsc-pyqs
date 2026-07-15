@@ -1,5 +1,5 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { getPaper, getSubject, getYear } from "../data/pyq";
+import { getPaper, getSubject, getYear, type Question } from "../data/pyq";
 import { Breadcrumbs, SiteHeader } from "../components/SiteHeader";
 
 export const Route = createFileRoute("/gs/$paper/$subject/$year")({
@@ -72,7 +72,7 @@ function YearPage() {
         </header>
 
         <ol className="space-y-4">
-          {yearBlock.questions.map((question) => (
+          {yearBlock.questions.map((question: Question) => (
             <li
               key={question.n}
               className="rounded-lg border border-border bg-card p-5 transition-colors hover:border-primary/40"

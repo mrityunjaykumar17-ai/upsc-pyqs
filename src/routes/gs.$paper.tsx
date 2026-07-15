@@ -1,5 +1,5 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { getPaper } from "../data/pyq";
+import { getPaper, type Subject } from "../data/pyq";
 import { Breadcrumbs, SiteHeader } from "../components/SiteHeader";
 
 export const Route = createFileRoute("/gs/$paper")({
@@ -52,8 +52,8 @@ function PaperPage() {
 
         <h2 className="mb-4 text-lg font-semibold">Subjects</h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {paper.subjects.map((s) => {
-            const totalQ = s.years.reduce((a, y) => a + y.questions.length, 0);
+          {paper.subjects.map((s: Subject) => {
+            const totalQ = s.years.reduce((a: number, y) => a + y.questions.length, 0);
             return (
               <Link
                 key={s.slug}
