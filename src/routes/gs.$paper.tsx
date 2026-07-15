@@ -1,0 +1,76 @@
+import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { getPaper } from "../data/pyq";
+import { Breadcrumbs, SiteHeader } from "../components/SiteHeader";
+
+export const Route = createFileRoute("/gs/$paper")({
+  loader: ({ params }) => {
+    const paper = getPaper(params.paper);
+    if (!paper) throw notFound();
+    return { paper };
+  },
+  head: ({ loaderData }) => {
+    if (!loaderData) return { meta: [{ title: "Not found" }, { name: "robots", content: "noindex" }] };
+    const { paper } = loaderData;
+    return {
+      meta: [
+        { title: `${paper.full} — UPSC Mains PYQ` },
+        { name: "description", content: `Subjects under ${paper.full}: ${paper.description}` },
+        { property: "og:title", content: `${paper.full} — UPSC Mains PYQ` },
+        { property: "og:description", content: paper.description },
+      ],
+    };
+  },
+  component: PaperPage,
+  notFoundComponent: () => (
+    <div className="min-h-screen bg-background">
+      <SiteHeader />
+      <div className="mx-auto max-w-3xl px-6 py-24 text-center">
+        <h1 className="text-2xl font-semibold">Paper not found</h1>
+        <Link to="/" className="mt-4 inline-block text-primary hover:underline">
+          Back to home
+        </Link>
+      </div>
+    </div>
+  ),
+});
+
+function PaperPage() {
+  const { paper } = Route.useLoaderData();
+
+  return (
+    <div className="min-h-screen bg-background">
+      <SiteHeader />
+      <main className="mx-auto max-w-6xl px-6 py-10">
+        <Breadcrumbs items={[{ label: "Home", to: "/" }, { label: paper.name }]} />
+        <header className="mt-4 mb-10">
+          <span className="text-xs font-medium uppercase tracking-wider text-primary">
+            {paper.name}
+          </span>
+          <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">{paper.full}</h1>
+          <p className="mt-2 text-muted-foreground">{paper.description}</p>
+        </header>
+
+        <h2 className="mb-4 text-lg font-semibold">Subjects</h2>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {paper.subjects.map((s) => {
+            const totalQ = s.years.reduce((a, y) => a + y.questions.length, 0);
+            return (
+              <Link
+                key={s.slug}
+                to="/gs/$paper/$subject"
+                params={{ paper: paper.slug, subject: s.slug }}
+                className="group rounded-lg border border-border bg-card p-5 transition-all hover:border-primary/50 hover:shadow-md"
+              >
+                <h3 className="font-semibold text-foreground">{s.name}</h3>
+                <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+                  <span>{s.years.length} years</span>
+                  <span>{totalQ} questions</span>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </main>
+    </div>
+  );
+}
