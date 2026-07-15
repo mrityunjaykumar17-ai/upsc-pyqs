@@ -43,8 +43,11 @@ export function Breadcrumbs({
           <li key={i} className="flex items-center gap-1.5">
             {i > 0 && <span aria-hidden>/</span>}
             {item.to ? (
-              // @ts-expect-error dynamic link
-              <Link to={item.to} params={item.params} className="hover:text-foreground transition-colors">
+              <Link
+                to={item.to as string}
+                params={item.params as never}
+                className="hover:text-foreground transition-colors"
+              >
                 {item.label}
               </Link>
             ) : (
