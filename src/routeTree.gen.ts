@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as GsPaperRouteImport } from './routes/gs.$paper'
 import { Route as GsPaperIndexRouteImport } from './routes/gs.$paper.index'
 import { Route as GsPaperSubjectRouteImport } from './routes/gs.$paper.$subject'
+import { Route as GsPaperSubjectIndexRouteImport } from './routes/gs.$paper.$subject.index'
 import { Route as GsPaperSubjectYearRouteImport } from './routes/gs.$paper.$subject.$year'
 
 const IndexRoute = IndexRouteImport.update({
@@ -35,6 +36,11 @@ const GsPaperSubjectRoute = GsPaperSubjectRouteImport.update({
   path: '/$subject',
   getParentRoute: () => GsPaperRoute,
 } as any)
+const GsPaperSubjectIndexRoute = GsPaperSubjectIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => GsPaperSubjectRoute,
+} as any)
 const GsPaperSubjectYearRoute = GsPaperSubjectYearRouteImport.update({
   id: '/$year',
   path: '/$year',
@@ -47,12 +53,13 @@ export interface FileRoutesByFullPath {
   '/gs/$paper/$subject': typeof GsPaperSubjectRouteWithChildren
   '/gs/$paper/': typeof GsPaperIndexRoute
   '/gs/$paper/$subject/$year': typeof GsPaperSubjectYearRoute
+  '/gs/$paper/$subject/': typeof GsPaperSubjectIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/gs/$paper/$subject': typeof GsPaperSubjectRouteWithChildren
   '/gs/$paper': typeof GsPaperIndexRoute
   '/gs/$paper/$subject/$year': typeof GsPaperSubjectYearRoute
+  '/gs/$paper/$subject': typeof GsPaperSubjectIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -61,6 +68,7 @@ export interface FileRoutesById {
   '/gs/$paper/$subject': typeof GsPaperSubjectRouteWithChildren
   '/gs/$paper/': typeof GsPaperIndexRoute
   '/gs/$paper/$subject/$year': typeof GsPaperSubjectYearRoute
+  '/gs/$paper/$subject/': typeof GsPaperSubjectIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -70,8 +78,9 @@ export interface FileRouteTypes {
     | '/gs/$paper/$subject'
     | '/gs/$paper/'
     | '/gs/$paper/$subject/$year'
+    | '/gs/$paper/$subject/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/gs/$paper/$subject' | '/gs/$paper' | '/gs/$paper/$subject/$year'
+  to: '/' | '/gs/$paper' | '/gs/$paper/$subject/$year' | '/gs/$paper/$subject'
   id:
     | '__root__'
     | '/'
@@ -79,6 +88,7 @@ export interface FileRouteTypes {
     | '/gs/$paper/$subject'
     | '/gs/$paper/'
     | '/gs/$paper/$subject/$year'
+    | '/gs/$paper/$subject/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -116,6 +126,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GsPaperSubjectRouteImport
       parentRoute: typeof GsPaperRoute
     }
+    '/gs/$paper/$subject/': {
+      id: '/gs/$paper/$subject/'
+      path: '/'
+      fullPath: '/gs/$paper/$subject/'
+      preLoaderRoute: typeof GsPaperSubjectIndexRouteImport
+      parentRoute: typeof GsPaperSubjectRoute
+    }
     '/gs/$paper/$subject/$year': {
       id: '/gs/$paper/$subject/$year'
       path: '/$year'
@@ -128,10 +145,12 @@ declare module '@tanstack/react-router' {
 
 interface GsPaperSubjectRouteChildren {
   GsPaperSubjectYearRoute: typeof GsPaperSubjectYearRoute
+  GsPaperSubjectIndexRoute: typeof GsPaperSubjectIndexRoute
 }
 
 const GsPaperSubjectRouteChildren: GsPaperSubjectRouteChildren = {
   GsPaperSubjectYearRoute: GsPaperSubjectYearRoute,
+  GsPaperSubjectIndexRoute: GsPaperSubjectIndexRoute,
 }
 
 const GsPaperSubjectRouteWithChildren = GsPaperSubjectRoute._addFileChildren(
