@@ -77,14 +77,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
+      { title: "UPSC Mains PYQ Archive — GS 1, 2, 3, 4, Essay" },
+      { name: "description", content: "Browse UPSC Civil Services Mains previous year questions organised by paper (GS I–IV, Essay), subject, and year." },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { property: "og:title", content: "UPSC Mains PYQ Archive — GS 1, 2, 3, 4, Essay" },
+      { property: "og:description", content: "Browse UPSC Civil Services Mains previous year questions organised by paper (GS I–IV, Essay), subject, and year." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "UPSC Mains PYQ Archive — GS 1, 2, 3, 4, Essay" },
+      { name: "twitter:description", content: "Browse UPSC Civil Services Mains previous year questions organised by paper (GS I–IV, Essay), subject, and year." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/9deb0ee2-4e05-403b-927a-1533830a38a0/id-preview-e94be8da--ac600c4d-58b8-4098-aaec-68653edefeff.lovable.app-1784144640547.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/9deb0ee2-4e05-403b-927a-1533830a38a0/id-preview-e94be8da--ac600c4d-58b8-4098-aaec-68653edefeff.lovable.app-1784144640547.png" },
     ],
     links: [
       {

@@ -11,10 +11,10 @@ export const Route = createFileRoute("/")({
         content:
           "Browse UPSC Civil Services Mains previous year questions organised by paper (GS I–IV, Essay), subject, and year.",
       },
-      { property: "og:title", content: "UPSC Mains PYQ Archive" },
+      { property: "og:title", content: "UPSC Mains PYQ Archive — GS 1, 2, 3, 4, Essay" },
       {
         property: "og:description",
-        content: "Previous year Mains questions organised by GS paper, subject and year.",
+        content: "Browse UPSC Civil Services Mains previous year questions organised by paper (GS I–IV, Essay), subject, and year.",
       },
     ],
   }),
