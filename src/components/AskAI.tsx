@@ -62,7 +62,7 @@ export function AskAI({ question, marks, words }: Props) {
               Regenerate
             </button>
           </div>
-          <div className="prose prose-sm max-w-none prose-headings:mt-3 prose-headings:mb-1 prose-p:my-1.5 prose-ul:my-1.5 prose-li:my-0.5 prose-headings:text-foreground prose-p:text-foreground prose-li:text-foreground prose-strong:text-foreground">
+          <div className="upsc-answer text-sm leading-relaxed text-foreground">
             <ReactMarkdown>{answer}</ReactMarkdown>
           </div>
           <p className="mt-3 text-[10px] italic text-muted-foreground">
