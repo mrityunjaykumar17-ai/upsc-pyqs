@@ -3,6 +3,8 @@ import { createFileRoute, Link, notFound, useLocation } from "@tanstack/react-ro
 import { getPaper, getSubject, getYear, type Question } from "../data/pyq";
 import { Breadcrumbs, SiteHeader } from "../components/SiteHeader";
 import { AskAI } from "../components/AskAI";
+import { makeQuestionId } from "../lib/question-id";
+
 
 export const Route = createFileRoute("/gs/$paper/$subject/$year")({
   loader: ({ params }) => {
@@ -101,21 +103,38 @@ function YearPage() {
                   {question.n}
                 </span>
                 <div className="flex-1">
-                  <p className="text-foreground leading-relaxed">{question.q}</p>
-                  {(question.marks || question.words) && (
-                    <div className="mt-3 flex flex-wrap gap-2 text-xs">
-                      {question.marks && (
-                        <span className="rounded-full bg-primary/10 px-2.5 py-0.5 font-medium text-primary">
-                          {question.marks} marks
-                        </span>
-                      )}
-                      {question.words && (
-                        <span className="rounded-full bg-secondary px-2.5 py-0.5 font-medium text-secondary-foreground">
-                          {question.words} words
-                        </span>
-                      )}
-                    </div>
-                  )}
+                  <Link
+                    to="/question/$id"
+                    params={{
+                      id: makeQuestionId(paper.slug, subject.slug, yearBlock.year, question.n),
+                    }}
+                    className="group block"
+                  >
+                    <p className="text-foreground leading-relaxed group-hover:text-primary">
+                      {question.q}
+                    </p>
+                  </Link>
+                  <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                    {question.marks && (
+                      <span className="rounded-full bg-primary/10 px-2.5 py-0.5 font-medium text-primary">
+                        {question.marks} marks
+                      </span>
+                    )}
+                    {question.words && (
+                      <span className="rounded-full bg-secondary px-2.5 py-0.5 font-medium text-secondary-foreground">
+                        {question.words} words
+                      </span>
+                    )}
+                    <Link
+                      to="/question/$id"
+                      params={{
+                        id: makeQuestionId(paper.slug, subject.slug, yearBlock.year, question.n),
+                      }}
+                      className="ml-auto text-xs font-medium text-primary hover:underline"
+                    >
+                      View details →
+                    </Link>
+                  </div>
                   <AskAI question={question.q} marks={question.marks} words={question.words} />
                 </div>
               </div>
