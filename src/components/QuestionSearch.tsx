@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { papers } from "../data/pyq";
+import { makeQuestionId } from "../lib/question-id";
 
 type IndexEntry = {
   q: string;
@@ -85,9 +86,8 @@ export function QuestionSearch() {
     setOpen(false);
     setQuery("");
     navigate({
-      to: "/gs/$paper/$subject/$year",
-      params: { paper: e.paperSlug, subject: e.subjectSlug, year: String(e.year) },
-      hash: `q-${e.n}`,
+      to: "/question/$id",
+      params: { id: makeQuestionId(e.paperSlug, e.subjectSlug, e.year, e.n) },
     });
   };
 
