@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { papers } from "../data/pyq";
 import { SiteHeader } from "../components/SiteHeader";
+import { QuestionSearch } from "../components/QuestionSearch";
 
 export const Route = createFileRoute("/")({
   head: () => ({
