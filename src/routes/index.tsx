@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { papers } from "../data/pyq";
 import { SiteHeader } from "../components/SiteHeader";
+import { QuestionSearch } from "../components/QuestionSearch";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -47,6 +48,12 @@ function Index() {
             <Stat label="Papers" value={String(papers.length)} />
             <Stat label="Subjects" value={String(totalSubjects)} />
             <Stat label="Questions" value={`${totalQuestions}+`} />
+          </div>
+          <div className="mt-8 max-w-2xl">
+            <QuestionSearch />
+            <p className="mt-2 text-xs text-muted-foreground">
+              Search across all {totalQuestions}+ questions. Press ↑↓ to navigate, Enter to open.
+            </p>
           </div>
         </section>
 

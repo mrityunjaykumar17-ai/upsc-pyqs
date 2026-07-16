@@ -1,6 +1,8 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { createFileRoute, Link, notFound, useLocation } from "@tanstack/react-router";
 import { getPaper, getSubject, getYear, type Question } from "../data/pyq";
 import { Breadcrumbs, SiteHeader } from "../components/SiteHeader";
+import { AskAI } from "../components/AskAI";
 
 export const Route = createFileRoute("/gs/$paper/$subject/$year")({
   loader: ({ params }) => {
@@ -40,6 +42,22 @@ export const Route = createFileRoute("/gs/$paper/$subject/$year")({
 
 function YearPage() {
   const { paper, subject, yearBlock } = Route.useLoaderData();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const hash = location.hash;
+    if (!hash) return;
+    const id = hash.replace(/^#/, "");
+    const el = document.getElementById(id);
+    if (el) {
+      setTimeout(() => {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+        el.classList.add("ring-2", "ring-primary");
+        setTimeout(() => el.classList.remove("ring-2", "ring-primary"), 2000);
+      }, 50);
+    }
+  }, [location.hash]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -67,7 +85,7 @@ function YearPage() {
             UPSC Mains {yearBlock.year}
           </h1>
           <p className="mt-2 text-muted-foreground">
-            {yearBlock.questions.length} questions. Marks and word limits shown where applicable.
+            {yearBlock.questions.length} questions. Click <strong>Ask AI</strong> under any question to generate a UPSC-format model answer.
           </p>
         </header>
 
@@ -75,7 +93,8 @@ function YearPage() {
           {yearBlock.questions.map((question: Question) => (
             <li
               key={question.n}
-              className="rounded-lg border border-border bg-card p-5 transition-colors hover:border-primary/40"
+              id={`q-${question.n}`}
+              className="scroll-mt-24 rounded-lg border border-border bg-card p-5 transition-all hover:border-primary/40"
             >
               <div className="flex items-start gap-4">
                 <span className="grid h-8 w-8 shrink-0 place-items-center rounded-md bg-secondary text-sm font-semibold text-secondary-foreground">
@@ -97,6 +116,7 @@ function YearPage() {
                       )}
                     </div>
                   )}
+                  <AskAI question={question.q} marks={question.marks} words={question.words} />
                 </div>
               </div>
             </li>

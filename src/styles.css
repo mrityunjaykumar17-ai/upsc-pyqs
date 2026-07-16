@@ -142,3 +142,37 @@
     color: var(--color-foreground);
   }
 }
+
+/* Markdown output for AI-generated UPSC answers */
+.upsc-answer h1,
+.upsc-answer h2,
+.upsc-answer h3,
+.upsc-answer h4 {
+  font-weight: 600;
+  color: var(--foreground);
+  margin-top: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+.upsc-answer h2 { font-size: 1rem; }
+.upsc-answer h3 { font-size: 0.9375rem; }
+.upsc-answer h4 { font-size: 0.875rem; }
+.upsc-answer p { margin: 0.4rem 0; }
+.upsc-answer ul,
+.upsc-answer ol { margin: 0.4rem 0; padding-left: 1.25rem; }
+.upsc-answer ul { list-style: disc; }
+.upsc-answer ol { list-style: decimal; }
+.upsc-answer li { margin: 0.15rem 0; }
+.upsc-answer strong { font-weight: 600; }
+.upsc-answer em { font-style: italic; }
+.upsc-answer code {
+  background: var(--secondary);
+  padding: 0.1rem 0.3rem;
+  border-radius: 4px;
+  font-size: 0.85em;
+}
+.upsc-answer blockquote {
+  border-left: 3px solid var(--primary);
+  padding-left: 0.75rem;
+  color: var(--muted-foreground);
+  margin: 0.5rem 0;
+}
