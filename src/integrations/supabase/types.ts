@@ -14,7 +14,197 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      coaching_questions: {
+        Row: {
+          coaching_institute: string
+          created_at: string
+          embedding: string | null
+          gs_paper: string | null
+          id: string
+          metadata: string | null
+          page_number: number | null
+          pdf_url: string
+          question_text: string
+          subject: string | null
+          test_series: string | null
+          topic: string | null
+          topper_copy_id: string
+          year: number | null
+        }
+        Insert: {
+          coaching_institute: string
+          created_at?: string
+          embedding?: string | null
+          gs_paper?: string | null
+          id?: string
+          metadata?: string | null
+          page_number?: number | null
+          pdf_url: string
+          question_text: string
+          subject?: string | null
+          test_series?: string | null
+          topic?: string | null
+          topper_copy_id: string
+          year?: number | null
+        }
+        Update: {
+          coaching_institute?: string
+          created_at?: string
+          embedding?: string | null
+          gs_paper?: string | null
+          id?: string
+          metadata?: string | null
+          page_number?: number | null
+          pdf_url?: string
+          question_text?: string
+          subject?: string | null
+          test_series?: string | null
+          topic?: string | null
+          topper_copy_id?: string
+          year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coaching_questions_topper_copy_id_fkey"
+            columns: ["topper_copy_id"]
+            isOneToOne: false
+            referencedRelation: "topper_copies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pyq_coaching_matches: {
+        Row: {
+          coaching_question_id: string
+          created_at: string
+          id: string
+          match_type: string
+          similarity_score: number
+          upsc_question_id: string
+        }
+        Insert: {
+          coaching_question_id: string
+          created_at?: string
+          id?: string
+          match_type?: string
+          similarity_score: number
+          upsc_question_id: string
+        }
+        Update: {
+          coaching_question_id?: string
+          created_at?: string
+          id?: string
+          match_type?: string
+          similarity_score?: number
+          upsc_question_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pyq_coaching_matches_coaching_question_id_fkey"
+            columns: ["coaching_question_id"]
+            isOneToOne: false
+            referencedRelation: "coaching_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pyq_coaching_matches_upsc_question_id_fkey"
+            columns: ["upsc_question_id"]
+            isOneToOne: false
+            referencedRelation: "upsc_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      topper_copies: {
+        Row: {
+          coaching_institute: string
+          created_at: string
+          essay_score: number | null
+          gs1_score: number | null
+          gs2_score: number | null
+          gs3_score: number | null
+          gs4_score: number | null
+          id: string
+          pdf_url: string
+          rank: number | null
+          source_url: string | null
+          test_series: string | null
+          topper_name: string
+          upsc_year: number | null
+        }
+        Insert: {
+          coaching_institute: string
+          created_at?: string
+          essay_score?: number | null
+          gs1_score?: number | null
+          gs2_score?: number | null
+          gs3_score?: number | null
+          gs4_score?: number | null
+          id?: string
+          pdf_url: string
+          rank?: number | null
+          source_url?: string | null
+          test_series?: string | null
+          topper_name: string
+          upsc_year?: number | null
+        }
+        Update: {
+          coaching_institute?: string
+          created_at?: string
+          essay_score?: number | null
+          gs1_score?: number | null
+          gs2_score?: number | null
+          gs3_score?: number | null
+          gs4_score?: number | null
+          id?: string
+          pdf_url?: string
+          rank?: number | null
+          source_url?: string | null
+          test_series?: string | null
+          topper_name?: string
+          upsc_year?: number | null
+        }
+        Relationships: []
+      }
+      upsc_questions: {
+        Row: {
+          created_at: string
+          embedding: string | null
+          id: string
+          marks: number | null
+          paper_slug: string
+          question_number: number
+          question_text: string
+          subject_slug: string
+          words: number | null
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          embedding?: string | null
+          id: string
+          marks?: number | null
+          paper_slug: string
+          question_number: number
+          question_text: string
+          subject_slug: string
+          words?: number | null
+          year: number
+        }
+        Update: {
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          marks?: number | null
+          paper_slug?: string
+          question_number?: number
+          question_text?: string
+          subject_slug?: string
+          words?: number | null
+          year?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
