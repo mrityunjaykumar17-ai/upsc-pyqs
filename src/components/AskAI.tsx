@@ -3,9 +3,9 @@ import ReactMarkdown from "react-markdown";
 import { useServerFn } from "@tanstack/react-start";
 import { askAI } from "../lib/ask-ai.functions";
 
-type Props = { question: string; marks?: number; words?: number };
+type Props = { question: string; marks?: number; words?: number; paper?: string; subject?: string };
 
-export function AskAI({ question, marks, words }: Props) {
+export function AskAI({ question, marks, words, paper, subject }: Props) {
   const ask = useServerFn(askAI);
   const [state, setState] = useState<"idle" | "loading" | "done" | "error">("idle");
   const [answer, setAnswer] = useState("");
@@ -16,7 +16,7 @@ export function AskAI({ question, marks, words }: Props) {
     setError("");
     setAnswer("");
     try {
-      const res = await ask({ data: { question, marks, words } });
+      const res = await ask({ data: { question, marks, words, paper, subject } });
       setAnswer(res.answer);
       setState("done");
     } catch (e) {
