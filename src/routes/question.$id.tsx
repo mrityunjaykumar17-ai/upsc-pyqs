@@ -1,19 +1,17 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, useServerFn } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { Breadcrumbs, SiteHeader } from "../components/SiteHeader";
 import { AskAI } from "../components/AskAI";
 import { DetailSection } from "../components/DetailSection";
 import { CoachingMatches } from "../components/CoachingMatches";
-import { TopperCopies } from "../components/TopperCopies";
 import { resolveQuestionId } from "../lib/question-id";
-import { getCoachingMatches, getTopperMatches } from "../data/resources";
+import { getMatchesForPyq } from "../lib/matches.functions";
 
 export const Route = createFileRoute("/question/$id")({
   loader: ({ params }) => {
     const resolved = resolveQuestionId(params.id);
     if (!resolved) throw notFound();
-    const coaching = getCoachingMatches(resolved.id);
-    const toppers = getTopperMatches(resolved.id);
-    return { resolved, coaching, toppers };
+    return { resolved };
   },
   head: ({ loaderData }) => {
     if (!loaderData)
@@ -56,8 +54,15 @@ export const Route = createFileRoute("/question/$id")({
 });
 
 function QuestionDetail() {
-  const { resolved, coaching, toppers } = Route.useLoaderData();
-  const { paper, subject, yearBlock, question } = resolved;
+  const { resolved } = Route.useLoaderData();
+  const { paper, subject, yearBlock, question, id } = resolved;
+
+  const fetchMatches = useServerFn(getMatchesForPyq);
+  const { data: matches, isLoading, isError, error } = useQuery({
+    queryKey: ["pyq-matches", id],
+    queryFn: () => fetchMatches({ data: { upscQuestionId: id, limit: 50 } }),
+    staleTime: 5 * 60 * 1000,
+  });
 
   return (
     <div className="min-h-screen bg-background">
@@ -84,9 +89,7 @@ function QuestionDetail() {
         {/* Section 1: Question */}
         <article className="mt-4 rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
           <div className="flex flex-wrap gap-2 text-[11px] font-medium uppercase tracking-wider">
-            <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-primary">
-              {paper.name}
-            </span>
+            <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-primary">{paper.name}</span>
             <span className="rounded-full bg-secondary px-2.5 py-0.5 text-secondary-foreground">
               {subject.name}
             </span>
@@ -112,35 +115,37 @@ function QuestionDetail() {
           </h1>
         </article>
 
-        {/* Section 2: Ask AI (reused as-is) */}
         <DetailSection
           title="AI Model Answer"
-          subtitle="Generate a UPSC Mains format answer for this question."
+          subtitle="Generate a UPSC Mains topper-style answer for this question."
         >
           <div className="rounded-xl border border-border bg-card p-5">
-            <AskAI question={question.q} marks={question.marks} words={question.words} />
+            <AskAI
+              question={question.q}
+              marks={question.marks}
+              words={question.words}
+              paper={paper.name}
+              subject={subject.name}
+            />
           </div>
         </DetailSection>
 
-        {/* Section 3: Coaching matches */}
         <DetailSection
-          title="Relevant Coaching Questions"
-          subtitle="Test-series questions matched to this PYQ, ranked by similarity."
+          title="Related Topper Copies & Test Series Questions"
+          subtitle="Semantically matched coaching test-series questions, linked to real topper answer copies."
         >
-          <CoachingMatches matches={coaching} />
+          {isLoading ? (
+            <div className="rounded-xl border border-dashed border-border bg-card/40 p-8 text-center text-sm text-muted-foreground">
+              Finding relevant topper copies…
+            </div>
+          ) : isError ? (
+            <div className="rounded-xl border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive">
+              Couldn't load matches: {(error as Error)?.message}
+            </div>
+          ) : (
+            <CoachingMatches matches={matches ?? []} />
+          )}
         </DetailSection>
-
-        {/* Section 4: Topper copies */}
-        <DetailSection
-          title="Relevant Topper Copies"
-          subtitle="Excerpts from top-rank answer copies referencing this question."
-        >
-          <TopperCopies copies={toppers} />
-        </DetailSection>
-
-        {/* Future-ready placeholders — same DetailSection pattern for
-            Model Answers, Notes, ARC/NITI Reports, Editorials, Judgements, Related PYQs.
-            Add a new component and drop it in here. */}
       </main>
     </div>
   );
