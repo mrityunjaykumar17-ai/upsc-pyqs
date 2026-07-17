@@ -1,4 +1,5 @@
-import { createFileRoute, Link, notFound, useServerFn } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { Breadcrumbs, SiteHeader } from "../components/SiteHeader";
 import { AskAI } from "../components/AskAI";
