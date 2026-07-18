@@ -73,6 +73,36 @@ export type Database = {
           },
         ]
       }
+      contact_messages: {
+        Row: {
+          contact_number: string | null
+          created_at: string
+          email: string | null
+          id: string
+          message: string
+          name: string
+          status: string
+        }
+        Insert: {
+          contact_number?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          message: string
+          name: string
+          status?: string
+        }
+        Update: {
+          contact_number?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          message?: string
+          name?: string
+          status?: string
+        }
+        Relationships: []
+      }
       pyq_coaching_matches: {
         Row: {
           coaching_question_id: string
@@ -127,10 +157,12 @@ export type Database = {
           id: string
           pdf_url: string
           rank: number | null
+          rank_source_url: string | null
           source_url: string | null
           test_series: string | null
           topper_name: string
           upsc_year: number | null
+          year_source_url: string | null
         }
         Insert: {
           coaching_institute: string
@@ -143,10 +175,12 @@ export type Database = {
           id?: string
           pdf_url: string
           rank?: number | null
+          rank_source_url?: string | null
           source_url?: string | null
           test_series?: string | null
           topper_name: string
           upsc_year?: number | null
+          year_source_url?: string | null
         }
         Update: {
           coaching_institute?: string
@@ -159,10 +193,12 @@ export type Database = {
           id?: string
           pdf_url?: string
           rank?: number | null
+          rank_source_url?: string | null
           source_url?: string | null
           test_series?: string | null
           topper_name?: string
           upsc_year?: number | null
+          year_source_url?: string | null
         }
         Relationships: []
       }
