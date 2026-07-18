@@ -85,9 +85,11 @@ function Index() {
           </div>
         </section>
       </main>
+      {/*
       <footer className="mt-16 border-t py-8 text-center text-xs text-muted-foreground">
         Data sourced from official UPSC question papers. Not affiliated with UPSC.
       </footer>
+      */}
     </div>
   );
 }
