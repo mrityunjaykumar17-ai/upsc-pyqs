@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ContactRouteImport } from './routes/contact'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as QuestionIdRouteImport } from './routes/question.$id'
 import { Route as GsPaperRouteImport } from './routes/gs.$paper'
@@ -17,6 +18,11 @@ import { Route as GsPaperSubjectRouteImport } from './routes/gs.$paper.$subject'
 import { Route as GsPaperSubjectIndexRouteImport } from './routes/gs.$paper.$subject.index'
 import { Route as GsPaperSubjectYearRouteImport } from './routes/gs.$paper.$subject.$year'
 
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -55,6 +61,7 @@ const GsPaperSubjectYearRoute = GsPaperSubjectYearRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/contact': typeof ContactRoute
   '/gs/$paper': typeof GsPaperRouteWithChildren
   '/question/$id': typeof QuestionIdRoute
   '/gs/$paper/$subject': typeof GsPaperSubjectRouteWithChildren
@@ -64,6 +71,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/contact': typeof ContactRoute
   '/question/$id': typeof QuestionIdRoute
   '/gs/$paper': typeof GsPaperIndexRoute
   '/gs/$paper/$subject/$year': typeof GsPaperSubjectYearRoute
@@ -72,6 +80,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/contact': typeof ContactRoute
   '/gs/$paper': typeof GsPaperRouteWithChildren
   '/question/$id': typeof QuestionIdRoute
   '/gs/$paper/$subject': typeof GsPaperSubjectRouteWithChildren
@@ -83,6 +92,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/contact'
     | '/gs/$paper'
     | '/question/$id'
     | '/gs/$paper/$subject'
@@ -92,6 +102,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/contact'
     | '/question/$id'
     | '/gs/$paper'
     | '/gs/$paper/$subject/$year'
@@ -99,6 +110,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/contact'
     | '/gs/$paper'
     | '/question/$id'
     | '/gs/$paper/$subject'
@@ -109,12 +121,20 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ContactRoute: typeof ContactRoute
   GsPaperRoute: typeof GsPaperRouteWithChildren
   QuestionIdRoute: typeof QuestionIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -196,6 +216,7 @@ const GsPaperRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ContactRoute: ContactRoute,
   GsPaperRoute: GsPaperRouteWithChildren,
   QuestionIdRoute: QuestionIdRoute,
 }
