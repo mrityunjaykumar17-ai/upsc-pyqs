@@ -4,7 +4,6 @@ import { SimilarityBadge } from "./SimilarityBadge";
 
 type SortKey = "similarity" | "year" | "topper" | "institute";
 
-// Normalize institute display names
 const INSTITUTE_LABEL: Record<string, string> = {
   Forumias: "ForumIAS",
   Vision: "Vision IAS",
@@ -25,7 +24,6 @@ export function CoachingMatches({ matches }: { matches: MatchRow[] }) {
   const [institute, setInstitute] = useState<string>("all");
   const [sort, setSort] = useState<SortKey>("similarity");
   const [search, setSearch] = useState("");
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   const institutes = useMemo(
     () => Array.from(new Set(matches.map((m) => m.coaching_institute))).sort(),
@@ -98,103 +96,65 @@ export function CoachingMatches({ matches }: { matches: MatchRow[] }) {
       {filtered.length === 0 ? (
         <EmptyState message="No matches for the selected filters." />
       ) : (
-        <div className="space-y-3">
-          {filtered.map((m) => {
-            const isOpen = expanded.has(m.match_id);
-            const gsKey = m.gs_paper?.toLowerCase();
-            const gsScore =
-              gsKey === "gs1" ? m.gs1_score
-              : gsKey === "gs2" ? m.gs2_score
-              : gsKey === "gs3" ? m.gs3_score
-              : gsKey === "gs4" ? m.gs4_score
-              : gsKey === "essay" ? m.essay_score
-              : null;
-            return (
-              <article
-                key={m.match_id}
-                className="rounded-xl border border-border bg-card shadow-sm transition-all hover:border-primary/40"
-              >
-                <button
-                  onClick={() =>
-                    setExpanded((prev) => {
-                      const n = new Set(prev);
-                      n.has(m.match_id) ? n.delete(m.match_id) : n.add(m.match_id);
-                      return n;
-                    })
-                  }
-                  className="w-full p-4 text-left"
-                >
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="flex flex-wrap items-center gap-2 text-xs">
-                      <span className="rounded-full bg-primary/10 px-2 py-0.5 font-semibold text-primary">
-                        {label(m.coaching_institute)}
-                      </span>
-                      {m.gs_paper && (
-                        <span className="rounded-full bg-secondary px-2 py-0.5 font-medium text-secondary-foreground">
-                          {m.gs_paper}
-                        </span>
-                      )}
-                      <span className="text-muted-foreground">
-                        Topper: <span className="font-medium text-foreground">{m.topper_name}</span>
-                      </span>
-                      {m.upsc_year && (
-                        <span className="text-muted-foreground">· CSE {m.upsc_year}</span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <SimilarityBadge score={Math.round(m.similarity * 100)} />
-                      <span className="text-muted-foreground text-xs">{isOpen ? "▲" : "▼"}</span>
-                    </div>
-                  </div>
-                  <p className="mt-2 text-sm leading-relaxed text-foreground">
-                    {m.question_text}
-                  </p>
-                </button>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {filtered.map((m) => (
+            <article
+              key={m.match_id}
+              className="flex flex-col rounded-xl border border-border bg-card p-4 shadow-sm transition-all hover:border-primary/40"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
+                  {label(m.coaching_institute)}
+                </span>
+                <SimilarityBadge score={Math.round(m.similarity * 100)} />
+              </div>
 
-                {isOpen && (
-                  <div className="border-t border-border px-4 py-3 text-sm">
-                    <dl className="grid gap-x-6 gap-y-2 sm:grid-cols-2">
-                      <Field label="Topper" value={m.topper_name} />
-                      <Field label="UPSC CSE Year" value={m.upsc_year ?? "Not available"} />
-                      <Field label="Rank" value={m.rank ?? "Not available"} />
-                      <Field
-                        label={`${m.gs_paper ?? "GS"} Score`}
-                        value={gsScore ?? "Not available"}
-                      />
-                      <Field label="Institute" value={label(m.coaching_institute)} />
-                      <Field label="Test Series" value={m.test_series ?? "Not available"} />
-                      <Field label="PDF Page" value={m.page_number ?? "Not available"} />
-                      {m.metadata && <Field label="Note" value={m.metadata} />}
-                    </dl>
-                    <div className="mt-3 flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground">
-                        Relevant answer: Page {m.page_number ?? "—"}
-                      </span>
-                      <a
-                        href={m.pdf_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90"
-                      >
-                        View Topper Answer <span aria-hidden>↗</span>
-                      </a>
-                    </div>
-                  </div>
-                )}
-              </article>
-            );
-          })}
+              <div className="mt-3 space-y-0.5 text-xs">
+                <div>
+                  <span className="text-muted-foreground">Candidate: </span>
+                  <span className="font-medium text-foreground">{m.topper_name}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">AIR: </span>
+                  <span className="font-medium text-foreground">
+                    {m.rank ?? "Rank not available"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">UPSC CSE: </span>
+                  <span className="font-medium text-foreground">
+                    {m.upsc_year ?? "Year not available"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-3">
+                <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Relevant question
+                </div>
+                <p className="mt-1 text-sm leading-relaxed text-foreground">{m.question_text}</p>
+              </div>
+
+              <div className="mt-3 flex items-center justify-between border-t border-border/60 pt-3">
+                <span className="text-xs text-muted-foreground">
+                  Relevant answer:{" "}
+                  <span className="font-medium text-foreground">
+                    {m.page_number ? `Page ${m.page_number}` : "See PDF"}
+                  </span>
+                </span>
+                <a
+                  href={m.page_number ? `${m.pdf_url}#page=${m.page_number}` : m.pdf_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90"
+                >
+                  View Topper Copy <span aria-hidden>↗</span>
+                </a>
+              </div>
+            </article>
+          ))}
         </div>
       )}
-    </div>
-  );
-}
-
-function Field({ label, value }: { label: string; value: string | number }) {
-  return (
-    <div>
-      <dt className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</dt>
-      <dd className="font-medium text-foreground">{value}</dd>
     </div>
   );
 }
