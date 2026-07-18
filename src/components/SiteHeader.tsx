@@ -17,14 +17,9 @@ export function SiteHeader() {
           <Link to="/" className="hover:text-foreground transition-colors">
             Home
           </Link>
-          <a
-            href="https://upsc.gov.in"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-foreground transition-colors"
-          >
-            UPSC.gov.in
-          </a>
+          <Link to="/contact" className="hover:text-foreground transition-colors">
+            Contact Us
+          </Link>
         </nav>
       </div>
     </header>
