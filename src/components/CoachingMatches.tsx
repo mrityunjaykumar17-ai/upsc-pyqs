@@ -114,18 +114,31 @@ export function CoachingMatches({ matches }: { matches: MatchRow[] }) {
                   <span className="text-muted-foreground">Candidate: </span>
                   <span className="font-medium text-foreground">{m.topper_name}</span>
                 </div>
-                <div>
-                  <span className="text-muted-foreground">AIR: </span>
-                  <span className="font-medium text-foreground">
-                    {m.rank ?? "Rank not available"}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">UPSC CSE: </span>
-                  <span className="font-medium text-foreground">
-                    {m.upsc_year ?? "Year not available"}
-                  </span>
-                </div>
+                {m.appearances && m.appearances.length > 0 ? (
+                  <div>
+                    <span className="text-muted-foreground">UPSC CSE: </span>
+                    <span className="font-medium text-foreground">
+                      {m.appearances
+                        .map((a) => `${a.year} · AIR ${a.rank}`)
+                        .join(" | ")}
+                    </span>
+                  </div>
+                ) : (
+                  <>
+                    <div>
+                      <span className="text-muted-foreground">AIR: </span>
+                      <span className="font-medium text-foreground">
+                        {m.rank ?? "Rank not available"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">UPSC CSE: </span>
+                      <span className="font-medium text-foreground">
+                        {m.upsc_year ?? "Year not available"}
+                      </span>
+                    </div>
+                  </>
+                )}
               </div>
 
               <div className="mt-3">
