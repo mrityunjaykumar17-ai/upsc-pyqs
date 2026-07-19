@@ -52,7 +52,7 @@ export const getMatchesForPyq = createServerFn({ method: "GET" })
            id, question_text, gs_paper, coaching_institute, test_series,
            page_number, pdf_url, metadata,
            topper_copies!inner (
-             topper_name, upsc_year, rank,
+             topper_name, upsc_year, rank, appearances,
              gs1_score, gs2_score, gs3_score, gs4_score, essay_score, source_url
            )
          )`,
@@ -66,6 +66,11 @@ export const getMatchesForPyq = createServerFn({ method: "GET" })
     const out: MatchRow[] = (rows ?? []).map((r: any) => {
       const c = r.coaching_questions;
       const t = c.topper_copies;
+      const raw = Array.isArray(t.appearances) ? t.appearances : [];
+      const appearances = raw
+        .filter((a: any) => a && typeof a.year === "number" && typeof a.rank === "number")
+        .map((a: any) => ({ year: a.year, rank: a.rank }))
+        .sort((a: { rank: number }, b: { rank: number }) => a.rank - b.rank);
       return {
         match_id: r.id,
         coaching_id: c.id,
@@ -80,6 +85,7 @@ export const getMatchesForPyq = createServerFn({ method: "GET" })
         topper_name: t.topper_name,
         upsc_year: t.upsc_year,
         rank: t.rank,
+        appearances,
         gs1_score: t.gs1_score,
         gs2_score: t.gs2_score,
         gs3_score: t.gs3_score,
