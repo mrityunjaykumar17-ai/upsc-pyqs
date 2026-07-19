@@ -1,0 +1,1 @@
+ALTER TABLE public.topper_copies ADD COLUMN IF NOT EXISTS appearances jsonb NOT NULL DEFAULT '[]'::jsonb;

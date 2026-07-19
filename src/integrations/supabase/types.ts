@@ -147,6 +147,7 @@ export type Database = {
       }
       topper_copies: {
         Row: {
+          appearances: Json
           coaching_institute: string
           created_at: string
           essay_score: number | null
@@ -165,6 +166,7 @@ export type Database = {
           year_source_url: string | null
         }
         Insert: {
+          appearances?: Json
           coaching_institute: string
           created_at?: string
           essay_score?: number | null
@@ -183,6 +185,7 @@ export type Database = {
           year_source_url?: string | null
         }
         Update: {
+          appearances?: Json
           coaching_institute?: string
           created_at?: string
           essay_score?: number | null
