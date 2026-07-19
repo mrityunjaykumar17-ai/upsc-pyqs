@@ -23,6 +23,7 @@ export type MatchRow = {
   topper_name: string;
   upsc_year: number | null;
   rank: number | null;
+  appearances: { year: number; rank: number }[];
   gs1_score: number | null;
   gs2_score: number | null;
   gs3_score: number | null;
