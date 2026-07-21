@@ -9,29 +9,28 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as EvaluateRouteImport } from './routes/evaluate'
-import { Route as ContactRouteImport } from './routes/contact'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as QuestionIdRouteImport } from './routes/question.$id'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ContactRouteImport } from './routes/contact'
+import { Route as EvaluateRouteImport } from './routes/evaluate'
 import { Route as GsPaperRouteImport } from './routes/gs.$paper'
+import { Route as QuestionIdRouteImport } from './routes/question.$id'
+import { Route as AuthenticatedEvaluateIdRouteImport } from './routes/_authenticated/evaluate.$id'
+import { Route as AuthenticatedEvaluateHistoryRouteImport } from './routes/_authenticated/evaluate.history'
+import { Route as AuthenticatedEvaluateUploadRouteImport } from './routes/_authenticated/evaluate.upload'
 import { Route as GsPaperIndexRouteImport } from './routes/gs.$paper.index'
 import { Route as GsPaperSubjectRouteImport } from './routes/gs.$paper.$subject'
-import { Route as AuthenticatedEvaluateUploadRouteImport } from './routes/_authenticated/evaluate.upload'
-import { Route as AuthenticatedEvaluateHistoryRouteImport } from './routes/_authenticated/evaluate.history'
-import { Route as AuthenticatedEvaluateIdRouteImport } from './routes/_authenticated/evaluate.$id'
 import { Route as GsPaperSubjectIndexRouteImport } from './routes/gs.$paper.$subject.index'
 import { Route as GsPaperSubjectYearRouteImport } from './routes/gs.$paper.$subject.$year'
 
-const EvaluateRoute = EvaluateRouteImport.update({
-  id: '/evaluate',
-  path: '/evaluate',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ContactRoute = ContactRouteImport.update({
-  id: '/contact',
-  path: '/contact',
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -39,18 +38,14 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const QuestionIdRoute = QuestionIdRouteImport.update({
-  id: '/question/$id',
-  path: '/question/$id',
+const EvaluateRoute = EvaluateRouteImport.update({
+  id: '/evaluate',
+  path: '/evaluate',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GsPaperRoute = GsPaperRouteImport.update({
@@ -58,6 +53,28 @@ const GsPaperRoute = GsPaperRouteImport.update({
   path: '/gs/$paper',
   getParentRoute: () => rootRouteImport,
 } as any)
+const QuestionIdRoute = QuestionIdRouteImport.update({
+  id: '/question/$id',
+  path: '/question/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedEvaluateIdRoute = AuthenticatedEvaluateIdRouteImport.update({
+  id: '/evaluate/$id',
+  path: '/evaluate/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedEvaluateHistoryRoute =
+  AuthenticatedEvaluateHistoryRouteImport.update({
+    id: '/evaluate/history',
+    path: '/evaluate/history',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedEvaluateUploadRoute =
+  AuthenticatedEvaluateUploadRouteImport.update({
+    id: '/evaluate/upload',
+    path: '/evaluate/upload',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const GsPaperIndexRoute = GsPaperIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -67,23 +84,6 @@ const GsPaperSubjectRoute = GsPaperSubjectRouteImport.update({
   id: '/$subject',
   path: '/$subject',
   getParentRoute: () => GsPaperRoute,
-} as any)
-const AuthenticatedEvaluateUploadRoute =
-  AuthenticatedEvaluateUploadRouteImport.update({
-    id: '/evaluate/upload',
-    path: '/evaluate/upload',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedEvaluateHistoryRoute =
-  AuthenticatedEvaluateHistoryRouteImport.update({
-    id: '/evaluate/history',
-    path: '/evaluate/history',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedEvaluateIdRoute = AuthenticatedEvaluateIdRouteImport.update({
-  id: '/evaluate/$id',
-  path: '/evaluate/$id',
-  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const GsPaperSubjectIndexRoute = GsPaperSubjectIndexRouteImport.update({
   id: '/',
@@ -200,25 +200,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/evaluate': {
-      id: '/evaluate'
-      path: '/evaluate'
-      fullPath: '/evaluate'
-      preLoaderRoute: typeof EvaluateRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/contact': {
-      id: '/contact'
-      path: '/contact'
-      fullPath: '/contact'
-      preLoaderRoute: typeof ContactRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -228,11 +214,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/evaluate': {
+      id: '/evaluate'
+      path: '/evaluate'
+      fullPath: '/evaluate'
+      preLoaderRoute: typeof EvaluateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gs/$paper': {
+      id: '/gs/$paper'
+      path: '/gs/$paper'
+      fullPath: '/gs/$paper'
+      preLoaderRoute: typeof GsPaperRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/question/$id': {
@@ -242,12 +249,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof QuestionIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/gs/$paper': {
-      id: '/gs/$paper'
-      path: '/gs/$paper'
-      fullPath: '/gs/$paper'
-      preLoaderRoute: typeof GsPaperRouteImport
-      parentRoute: typeof rootRouteImport
+    '/_authenticated/evaluate/$id': {
+      id: '/_authenticated/evaluate/$id'
+      path: '/evaluate/$id'
+      fullPath: '/evaluate/$id'
+      preLoaderRoute: typeof AuthenticatedEvaluateIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/evaluate/history': {
+      id: '/_authenticated/evaluate/history'
+      path: '/evaluate/history'
+      fullPath: '/evaluate/history'
+      preLoaderRoute: typeof AuthenticatedEvaluateHistoryRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/evaluate/upload': {
+      id: '/_authenticated/evaluate/upload'
+      path: '/evaluate/upload'
+      fullPath: '/evaluate/upload'
+      preLoaderRoute: typeof AuthenticatedEvaluateUploadRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/gs/$paper/': {
       id: '/gs/$paper/'
@@ -262,27 +283,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/gs/$paper/$subject'
       preLoaderRoute: typeof GsPaperSubjectRouteImport
       parentRoute: typeof GsPaperRoute
-    }
-    '/_authenticated/evaluate/upload': {
-      id: '/_authenticated/evaluate/upload'
-      path: '/evaluate/upload'
-      fullPath: '/evaluate/upload'
-      preLoaderRoute: typeof AuthenticatedEvaluateUploadRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/evaluate/history': {
-      id: '/_authenticated/evaluate/history'
-      path: '/evaluate/history'
-      fullPath: '/evaluate/history'
-      preLoaderRoute: typeof AuthenticatedEvaluateHistoryRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/evaluate/$id': {
-      id: '/_authenticated/evaluate/$id'
-      path: '/evaluate/$id'
-      fullPath: '/evaluate/$id'
-      preLoaderRoute: typeof AuthenticatedEvaluateIdRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/gs/$paper/$subject/': {
       id: '/gs/$paper/$subject/'
@@ -355,3 +355,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
