@@ -9,18 +9,38 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as EvaluateRouteImport } from './routes/evaluate'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as QuestionIdRouteImport } from './routes/question.$id'
 import { Route as GsPaperRouteImport } from './routes/gs.$paper'
 import { Route as GsPaperIndexRouteImport } from './routes/gs.$paper.index'
 import { Route as GsPaperSubjectRouteImport } from './routes/gs.$paper.$subject'
+import { Route as AuthenticatedEvaluateUploadRouteImport } from './routes/_authenticated/evaluate.upload'
+import { Route as AuthenticatedEvaluateHistoryRouteImport } from './routes/_authenticated/evaluate.history'
+import { Route as AuthenticatedEvaluateIdRouteImport } from './routes/_authenticated/evaluate.$id'
 import { Route as GsPaperSubjectIndexRouteImport } from './routes/gs.$paper.$subject.index'
 import { Route as GsPaperSubjectYearRouteImport } from './routes/gs.$paper.$subject.$year'
 
+const EvaluateRoute = EvaluateRouteImport.update({
+  id: '/evaluate',
+  path: '/evaluate',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
   path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -48,6 +68,23 @@ const GsPaperSubjectRoute = GsPaperSubjectRouteImport.update({
   path: '/$subject',
   getParentRoute: () => GsPaperRoute,
 } as any)
+const AuthenticatedEvaluateUploadRoute =
+  AuthenticatedEvaluateUploadRouteImport.update({
+    id: '/evaluate/upload',
+    path: '/evaluate/upload',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedEvaluateHistoryRoute =
+  AuthenticatedEvaluateHistoryRouteImport.update({
+    id: '/evaluate/history',
+    path: '/evaluate/history',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedEvaluateIdRoute = AuthenticatedEvaluateIdRouteImport.update({
+  id: '/evaluate/$id',
+  path: '/evaluate/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const GsPaperSubjectIndexRoute = GsPaperSubjectIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -61,9 +98,14 @@ const GsPaperSubjectYearRoute = GsPaperSubjectYearRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
+  '/evaluate': typeof EvaluateRoute
   '/gs/$paper': typeof GsPaperRouteWithChildren
   '/question/$id': typeof QuestionIdRoute
+  '/evaluate/$id': typeof AuthenticatedEvaluateIdRoute
+  '/evaluate/history': typeof AuthenticatedEvaluateHistoryRoute
+  '/evaluate/upload': typeof AuthenticatedEvaluateUploadRoute
   '/gs/$paper/$subject': typeof GsPaperSubjectRouteWithChildren
   '/gs/$paper/': typeof GsPaperIndexRoute
   '/gs/$paper/$subject/$year': typeof GsPaperSubjectYearRoute
@@ -71,8 +113,13 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
+  '/evaluate': typeof EvaluateRoute
   '/question/$id': typeof QuestionIdRoute
+  '/evaluate/$id': typeof AuthenticatedEvaluateIdRoute
+  '/evaluate/history': typeof AuthenticatedEvaluateHistoryRoute
+  '/evaluate/upload': typeof AuthenticatedEvaluateUploadRoute
   '/gs/$paper': typeof GsPaperIndexRoute
   '/gs/$paper/$subject/$year': typeof GsPaperSubjectYearRoute
   '/gs/$paper/$subject': typeof GsPaperSubjectIndexRoute
@@ -80,9 +127,15 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
+  '/evaluate': typeof EvaluateRoute
   '/gs/$paper': typeof GsPaperRouteWithChildren
   '/question/$id': typeof QuestionIdRoute
+  '/_authenticated/evaluate/$id': typeof AuthenticatedEvaluateIdRoute
+  '/_authenticated/evaluate/history': typeof AuthenticatedEvaluateHistoryRoute
+  '/_authenticated/evaluate/upload': typeof AuthenticatedEvaluateUploadRoute
   '/gs/$paper/$subject': typeof GsPaperSubjectRouteWithChildren
   '/gs/$paper/': typeof GsPaperIndexRoute
   '/gs/$paper/$subject/$year': typeof GsPaperSubjectYearRoute
@@ -92,9 +145,14 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/auth'
     | '/contact'
+    | '/evaluate'
     | '/gs/$paper'
     | '/question/$id'
+    | '/evaluate/$id'
+    | '/evaluate/history'
+    | '/evaluate/upload'
     | '/gs/$paper/$subject'
     | '/gs/$paper/'
     | '/gs/$paper/$subject/$year'
@@ -102,17 +160,28 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/auth'
     | '/contact'
+    | '/evaluate'
     | '/question/$id'
+    | '/evaluate/$id'
+    | '/evaluate/history'
+    | '/evaluate/upload'
     | '/gs/$paper'
     | '/gs/$paper/$subject/$year'
     | '/gs/$paper/$subject'
   id:
     | '__root__'
     | '/'
+    | '/_authenticated'
+    | '/auth'
     | '/contact'
+    | '/evaluate'
     | '/gs/$paper'
     | '/question/$id'
+    | '/_authenticated/evaluate/$id'
+    | '/_authenticated/evaluate/history'
+    | '/_authenticated/evaluate/upload'
     | '/gs/$paper/$subject'
     | '/gs/$paper/'
     | '/gs/$paper/$subject/$year'
@@ -121,18 +190,42 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
   ContactRoute: typeof ContactRoute
+  EvaluateRoute: typeof EvaluateRoute
   GsPaperRoute: typeof GsPaperRouteWithChildren
   QuestionIdRoute: typeof QuestionIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/evaluate': {
+      id: '/evaluate'
+      path: '/evaluate'
+      fullPath: '/evaluate'
+      preLoaderRoute: typeof EvaluateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/contact': {
       id: '/contact'
       path: '/contact'
       fullPath: '/contact'
       preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -170,6 +263,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GsPaperSubjectRouteImport
       parentRoute: typeof GsPaperRoute
     }
+    '/_authenticated/evaluate/upload': {
+      id: '/_authenticated/evaluate/upload'
+      path: '/evaluate/upload'
+      fullPath: '/evaluate/upload'
+      preLoaderRoute: typeof AuthenticatedEvaluateUploadRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/evaluate/history': {
+      id: '/_authenticated/evaluate/history'
+      path: '/evaluate/history'
+      fullPath: '/evaluate/history'
+      preLoaderRoute: typeof AuthenticatedEvaluateHistoryRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/evaluate/$id': {
+      id: '/_authenticated/evaluate/$id'
+      path: '/evaluate/$id'
+      fullPath: '/evaluate/$id'
+      preLoaderRoute: typeof AuthenticatedEvaluateIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/gs/$paper/$subject/': {
       id: '/gs/$paper/$subject/'
       path: '/'
@@ -186,6 +300,21 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedEvaluateIdRoute: typeof AuthenticatedEvaluateIdRoute
+  AuthenticatedEvaluateHistoryRoute: typeof AuthenticatedEvaluateHistoryRoute
+  AuthenticatedEvaluateUploadRoute: typeof AuthenticatedEvaluateUploadRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedEvaluateIdRoute: AuthenticatedEvaluateIdRoute,
+  AuthenticatedEvaluateHistoryRoute: AuthenticatedEvaluateHistoryRoute,
+  AuthenticatedEvaluateUploadRoute: AuthenticatedEvaluateUploadRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
 interface GsPaperSubjectRouteChildren {
   GsPaperSubjectYearRoute: typeof GsPaperSubjectYearRoute
@@ -216,20 +345,13 @@ const GsPaperRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
   ContactRoute: ContactRoute,
+  EvaluateRoute: EvaluateRoute,
   GsPaperRoute: GsPaperRouteWithChildren,
   QuestionIdRoute: QuestionIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

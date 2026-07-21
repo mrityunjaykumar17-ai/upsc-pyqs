@@ -103,6 +103,114 @@ export type Database = {
         }
         Relationships: []
       }
+      evaluation_quotas: {
+        Row: {
+          created_at: string
+          daily_limit: number
+          plan: string
+          reset_at: string
+          updated_at: string
+          used_today: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          daily_limit?: number
+          plan?: string
+          reset_at?: string
+          updated_at?: string
+          used_today?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          daily_limit?: number
+          plan?: string
+          reset_at?: string
+          updated_at?: string
+          used_today?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      evaluations: {
+        Row: {
+          created_at: string
+          detected_meta: Json | null
+          detected_question: string | null
+          detected_question_id: string | null
+          error_message: string | null
+          evaluation: Json | null
+          file_paths: Json
+          id: string
+          marks_awarded: number | null
+          marks_out_of: number | null
+          ocr_text: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          detected_meta?: Json | null
+          detected_question?: string | null
+          detected_question_id?: string | null
+          error_message?: string | null
+          evaluation?: Json | null
+          file_paths?: Json
+          id?: string
+          marks_awarded?: number | null
+          marks_out_of?: number | null
+          ocr_text?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          detected_meta?: Json | null
+          detected_question?: string | null
+          detected_question_id?: string | null
+          error_message?: string | null
+          evaluation?: Json | null
+          file_paths?: Json
+          id?: string
+          marks_awarded?: number | null
+          marks_out_of?: number | null
+          ocr_text?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          name: string | null
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id: string
+          name?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       pyq_coaching_matches: {
         Row: {
           coaching_question_id: string
