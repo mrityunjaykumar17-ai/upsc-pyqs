@@ -186,7 +186,7 @@ Evaluate now. Return only the JSON.`;
 
   await supabaseAdmin.from("evaluations").update({
     status: "done",
-    evaluation: report as unknown as Record<string, unknown>,
+    evaluation: JSON.parse(JSON.stringify(report)),
     marks_awarded: report.marks_awarded,
     marks_out_of: report.marks_out_of,
     detected_question_id: matchedQ?.id ?? null,
