@@ -1,75 +1,132 @@
-## Scope
 
-Sixteen numbered changes to the existing site. Existing GS → Subject → Year → Question hierarchy and all working data stay intact.
+This is two very large features. I'll outline scope, phasing, and open questions before writing any code.
 
-## 1. Simplify topper/coaching cards (Detail page)
+## Overview
 
-- In `CoachingMatches.tsx`: remove GS Score and Test Series display. Keep matching question, coaching institute, candidate name, AIR, UPSC year, PDF link with page number.
-- No schema changes for this step (fields stay in DB, UI just hides them).
+Two new top-level tabs:
+1. **AI Evaluation** — auth-gated. Upload handwritten answer sheets → OCR → AI evaluation → history.
+2. **Current Affairs** — daily ingested UPSC-oriented news with PYQ mapping, syllabus mapping, answer-writing material.
 
-## 2. Enrich topper rank + year (data only, no fabrication)
+Both are large. I recommend shipping in phases; details below.
 
-- Add columns to `topper_copies`: `upsc_rank int`, `upsc_year int` (rename in code from existing `rank`/`upsc_year` — schema already has `rank`, `upsc_year`), plus `rank_source_url text`, `year_source_url text`.
-- Since `rank` and `upsc_year` already exist, only add the two `*_source_url` columns via migration.
-- Backfill: I will fetch verified rank/year from public UPSC-related sources (official UPSC final result PDFs where accessible, coaching topper profile pages) via a one-off enrichment script (`scripts/enrich-toppers.ts`). Only exact name matches with a corroborating source are written; ambiguous names skipped.
-- UI: show "Rank not available" / "Year not available" when null.
+---
 
-Note: I cannot guarantee 100% coverage — will do a best-effort pass and log unresolved candidates. No fabricated values.
+## Phase A — AI Evaluation (MVP)
 
-## 3 + 4 + 5. Ask AI vs Customize
+### Navigation
+- Add `AI Evaluation` link in `SiteHeader.tsx` (next to Home, Contact Us).
+- New route `/evaluate` (landing) and `/evaluate/history`, `/evaluate/$id` (result page).
 
-- Detail page shows two buttons: `[Ask AI]` (existing instant generation) and `[Customize]` (new).
-- New component `CustomizeAnswer.tsx`:
-  - Word count selector: 150 / 250 / Custom.
-  - Toggle chips: More Indian Examples, Add Data, Add Case Studies, Add Current Affairs, Add Government Schemes, Add Quotes, Better Introduction, Better Conclusion, Balanced Analysis.
-  - Free-text input.
-  - Continuing chat interface (uses AI Elements primitives: Conversation, Message, PromptInput, Shimmer).
-- New server function `customizeAnswer` (streaming via `streamText` + `toUIMessageStreamResponse`) at `/api/chat`-style server route. Because this is an existing TanStack project and we already use non-streaming `fetch` for Ask AI, I'll implement Customize as a server route `src/routes/api/customize-chat.ts` using AI SDK `streamText` and `useChat` on the client.
-- Context injected server-side into the system message: question text, GS paper, subject, year, marks, words, and the previously generated default answer if the client passes it.
+### Landing page (`/evaluate`)
+- Explains the feature and its checks (marks prediction, structure, demand, dimensions, keywords, diagrams, model answer, etc.).
+- CTA changes based on auth state (Sign in → Upload).
 
-## 6 + 7. Improved default Ask AI
+### Auth
+- Enable Supabase email/phone + Google OAuth via managed Cloud auth.
+- Sign-in modal with **Continue with Google** and **Continue with Phone (OTP)**.
+- Create `profiles` table: `id (auth.users FK)`, `name`, `email`, `phone`.
+- Trigger to auto-create profile on signup.
 
-- Rewrite the system prompt in `ask-ai.functions.ts` with the enrichment priorities (data, examples, case studies, schemes, reports, quotes) and the "never fabricate" rules. Keep the same request/response shape so `AskAI.tsx` is unchanged.
+### Storage
+- Create Supabase Storage bucket `answer-uploads` (private). Signed URLs for reads.
+- Table `evaluations`:
+  - `id`, `user_id`, `status` (`uploaded|ocr|evaluating|done|error`),
+  - `file_paths jsonb` (list of stored files), `ocr_text text`,
+  - `detected_question_id text nullable` (FK-ish to `upsc_questions`), `detected_meta jsonb` (paper/year/topic when no DB match),
+  - `evaluation jsonb` (structured report), `marks_awarded numeric`, `marks_out_of int`,
+  - `created_at`, `updated_at`.
+- Table `evaluation_pages`:
+  - `id`, `evaluation_id`, `page_number`, `ocr_text`, `ocr_meta jsonb` (blocks, underlines, diagrams flags).
+- RLS: user can CRUD only their own rows; service role full.
+- GRANTs per rules.
 
-## 8 + 9 + 10 + 11 + 12. Ethics handling
+### Upload interface
+- Drag & drop + file picker (PDF, JPG, PNG, multi-page).
+- Uploads directly to Storage; then calls `startEvaluation` server fn.
 
-- In both `ask-ai.functions.ts` and the customize server route, detect Ethics: `paper` matches `GS4`/`Ethics` (case-insensitive) OR `subject` contains ethics keywords.
-- If Ethics: further classify theory vs case study by keyword heuristics ("you are", "options available", "course of action", "case study" → case study).
-- Use dedicated system prompts for Ethics-theory (Point → Explanation → Example, personality library, accurate quotes only, no fabrication) and Ethics-case-study (Facts / Stakeholders / Ethical issues / Values in conflict / 3–4 Options with Pros/Cons / Recommended action / Implementation / Ethical justification).
+### OCR pipeline
+- Server function `runOcr` (createServerFn, auth middleware).
+- OCR provider: **Google Gemini via Lovable AI Gateway** (`google/gemini-2.5-pro` or the current default multimodal model per `ai-models-chat`). It handles handwritten text, structure, underlines, headings, tables, and diagrams reasonably well and avoids third-party OCR keys.
+- Prompt returns structured JSON: pages[] with paragraphs, headings, bullets, numbering, underlined tokens, diagrams/tables flags, and detected question text.
 
-## 13. Header
+### Question matching
+- Embed detected question text with `google/gemini-embedding-2` (matches existing pgvector setup).
+- Cosine search against `upsc_questions.embedding` (top 1, threshold ≈ 0.75).
+- If matched: link `detected_question_id`. Else store detected metadata.
 
-- In `SiteHeader.tsx`: replace `UPSC.gov.in` external link with a `<Link to="/contact">Contact Us</Link>`.
+### AI evaluation
+- Modular prompt built from criteria blocks (marks, demand, structure, content, keywords, value addition, diagrams, underlines, handwriting, language, time, missing points, improved answer).
+- Ethics-specific branch reuses existing `answer-prompt.ts` ethics detection.
+- Model: `openai/gpt-5.5` (chat default), structured JSON output via schema.
+- Store report in `evaluations.evaluation`.
 
-## 14. Contact page
+### Results UI (`/evaluate/$id`)
+- Prominent score card at top (e.g., `11 / 15` + expected range).
+- Expandable sections per criterion with strength/weakness chips.
+- Diff view: student answer vs improved topper answer.
+- Related coaching/topper copies (reuse `CoachingMatches` when matched to a PYQ).
+- Download report as PDF (client-side via `window.print` styled page for MVP).
 
-- New route `src/routes/contact.tsx` with a form: name (required), email (optional, validated), contact_number (optional), message (required, min length).
-- New table `public.contact_messages` (id, name, email, contact_number, message, status, created_at) with RLS: anon INSERT allowed (public form), no SELECT for anon. GRANTs per rules.
-- Submission flow: client calls a `submitContact` server function which (a) validates with Zod, (b) inserts row via server publishable client, (c) sends email to `mrityunjay.tab@gmail.com` using Lovable Emails (`sendTemplateEmail`). Requires email domain + auth/app email scaffolding. Since email domain setup requires user action, the flow will:
-  - Insert to DB always.
-  - Attempt email send; if `no_email_domain` / not configured, log a warning and still return success (DB backup preserved).
-- I will prompt the user separately to run email domain setup so email delivery to `mrityunjay.tab@gmail.com` starts working.
+### History (`/evaluate/history`)
+- List user's evaluations with date, question, marks, status, delete, search.
 
-## 15. Footer
+### Premium-ready
+- `evaluation_quotas` table (`user_id`, `plan`, `daily_limit`, `used_today`, `reset_at`) — schema only, no limits enforced by default.
+- Feature flags via a `plan_features` config table.
 
-- Add a minimal footer component `SiteFooter.tsx` with only "Made by Mrityunjay" and include it in `__root.tsx`.
+---
 
-## 16. Verification
+## Phase B — Current Affairs
 
-- Playwright smoke pass: browse to a GS4 ethics question → check both buttons; browse to a non-ethics question → Ask AI; open Contact page → submit test message; verify footer text.
+### Navigation
+- Add `Current Affairs` link. Route `/current-affairs` + `/current-affairs/$date` + `/current-affairs/article/$id`.
 
-## Technical details
+### Schema
+- `ca_articles`: `id`, `headline`, `why_in_news`, `summary`, `published_on date`, `gs_papers text[]`, `syllabus_topics text[]`, `dimensions jsonb`, `keywords text[]`, `static_concepts jsonb`, `answer_writing jsonb` (facts, schemes, reports, committees, articles, judgments, data, examples, quotes, diagrams), `practice_questions jsonb`, `model_answer text`, `embedding vector`.
+- `ca_sources`: `id`, `article_id`, `source_name`, `url`, `published_at`.
+- `ca_pyq_links`: `id`, `article_id`, `upsc_question_id`, `similarity`.
+- `ca_bookmarks` / `ca_notes` / `ca_highlights` per user.
+- RLS + GRANTs.
 
-- Migration for step 2: `ALTER TABLE topper_copies ADD COLUMN rank_source_url text, ADD COLUMN year_source_url text;`
-- Migration for step 14: create `contact_messages`, RLS `INSERT WITH CHECK (true)` for `anon`+`authenticated`, no SELECT policy for anon; GRANT INSERT to anon/authenticated, GRANT ALL to service_role.
-- Streaming chat route uses `@ai-sdk/openai-compatible` + AI Gateway helper (`createLovableAiGatewayProvider`) with `openai/gpt-5.5`.
-- AI Elements install: `bun x ai-elements@latest add conversation message prompt-input shimmer` for Customize only. If install fails I'll build a minimal composer inline (documented exception).
-- No changes to existing routes, matching pipeline, embeddings, or the search/AskAI components except the two-button row.
+### Ingestion pipeline
+- **Important honesty**: I can't run a live daily scraper from inside the app. Two options:
+  1. **Scheduled TSS route + pg_cron** (`/api/public/hooks/ca-ingest`) that pulls RSS feeds from The Hindu, Indian Express, PIB, PRS, etc., calls AI to summarize/classify, deduplicates via embeddings, writes rows. Reliable but limited to sources that expose RSS/JSON.
+  2. Manual/CSV upload by admin.
+- I'll build **option 1** with a small set of RSS sources (PIB, The Hindu top stories, Indian Express, PRS blog). Coaching-source scraping (Vision IAS/ForumIAS) is fragile and often behind paywalls/ToS — I'll leave hooks but not enable by default.
 
-## Out of scope
+### Per-article AI processing
+- Single `processArticle` server fn: takes raw text + URL, returns structured `ca_articles` row.
+- Deduplication: embed headline+lead; if cosine ≥ 0.9 vs last 7 days, merge sources into existing article instead of inserting.
+- PYQ mapping: cosine search vs `upsc_questions.embedding`, top 5 ≥ 0.55 → `ca_pyq_links`.
 
-- Rebuilding matches table (already discussed in previous turn).
-- Any change to the GS → Subject → Year → Q hierarchy.
-- Building marketing/analytics/admin dashboards.
+### Frontend
+- Date-grouped feed (reverse chronological), expandable date groups.
+- Article card with sections: Why in news, Summary, Syllabus mapping, Related PYQs, Demand analysis, Static concepts, Multi-dimensional analysis, Answer-writing enrichment, Practice questions, Model answer, "You should also read".
+- Filters (date, GS paper, subject, source, ministry, scheme, etc.).
+- AI-powered search: server fn that embeds the query and returns top articles.
+- Bookmarks + notes + highlights (auth required).
+- **Daily Revision** section: top 5 news/keywords/data/PYQs/questions for the day (auto-generated in ingest).
+- **Weekly / Monthly compilations**: server fn generates a compiled markdown/HTML doc from the week/month's articles; cached in `ca_compilations` table.
 
-Ready to implement on approval.
+### Future-proofing
+- Schema keeps `type` on `ca_articles` (`mains|prelims`) and `quizzes` table stub for prelims mode, flashcards, spaced repetition.
+
+---
+
+## Recommended phasing
+
+Because both features together are far larger than a single build session, I'd like to ship in this order and get your OK at each gate:
+
+1. **A1 – AI Evaluation MVP**: nav tab, landing, auth (Google + phone OTP), upload → OCR → single-question evaluation → results page → history. No premium quotas UI, no PDF export.
+2. **A2 – AI Evaluation polish**: PDF export, quotas schema, model-answer diff, topper-copy comparison surface.
+3. **B1 – Current Affairs foundation**: schema, ingest pipeline (RSS: PIB + Hindu + Indian Express + PRS), article page, date feed, PYQ mapping, filters.
+4. **B2 – Current Affairs power features**: AI search, bookmarks/notes/highlights, Daily Revision, Weekly/Monthly compilations.
+
+## Open questions before I start
+
+1. **Phone auth**: Supabase phone OTP requires an SMS provider (Twilio/MessageBird) with your credentials. Do you already have one, or should I ship **Google-only sign-in first** and add phone later when you provide SMS credentials?
+2. **Model choice for OCR**: OK to use Gemini via Lovable AI Gateway (no extra keys), or do you want a dedicated OCR service (Google Vision/AWS Textract — needs your API key)?
+3. **CA ingestion sources**: OK to start with public RSS (PIB, The Hindu, Indian Express, PRS) and skip Vision IAS/ForumIAS scraping (ToS/paywall risk)?
+4. **Scope of this build**: Should I ship **Phase A1 only** in this turn, or attempt A1 + B1 together (larger, higher chance of rough edges)?
+
+Answering these unblocks me. If you don't want to answer, my defaults are: Google-only sign-in first, Gemini for OCR, RSS-only for CA, and ship **A1 first**.
