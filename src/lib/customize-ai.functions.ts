@@ -1,6 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 import { buildAnswerPrompt, callLovableChat } from "./answer-prompt";
-import { fetchEthicsExampleBank, isEthicsQuestion } from "./ethics-cache.server";
 import { cacheModelAnswerIfMissing } from "./model-answer-cache.server";
 
 type ChatMsg = { role: "user" | "assistant"; content: string };
@@ -46,15 +45,6 @@ export const customizeAI = createServerFn({ method: "POST" })
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const ethics = isEthicsQuestion({
-      question: data.question,
-      paper: data.paper,
-      subject: data.subject,
-    });
-    const exampleBank = ethics.isEthics
-      ? await fetchEthicsExampleBank(data.question)
-      : undefined;
-
     const { system } = buildAnswerPrompt({
       question: data.question,
       marks: data.marks,
@@ -62,7 +52,6 @@ export const customizeAI = createServerFn({ method: "POST" })
       paper: data.paper,
       subject: data.subject,
       previousAnswer: data.previousAnswer,
-      exampleBank,
     });
 
     const contextBlock = [

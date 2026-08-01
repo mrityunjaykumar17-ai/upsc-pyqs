@@ -108,15 +108,3 @@ export const getQuestionsBySubject = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return (rows ?? []) as PrelimsQuestion[];
   });
-
-/** Public read-only Mains PYQ list (admin-managed). */
-export const listMainsPyqs = createServerFn({ method: "GET" }).handler(async () => {
-  const supabase = serverPublicSupabase();
-  const { data, error } = await supabase
-    .from("mains_pyqs")
-    .select("id, year, paper, subject, question_text, model_answer, marks")
-    .order("year", { ascending: false })
-    .order("created_at", { ascending: false });
-  if (error) throw new Error(error.message);
-  return data ?? [];
-});

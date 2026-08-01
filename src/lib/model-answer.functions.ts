@@ -3,10 +3,6 @@ import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { buildAnswerPrompt, callLovableChat } from "./answer-prompt";
 import { cacheModelAnswerIfMissing } from "./model-answer-cache.server";
-import {
-  fetchEthicsExampleBank,
-  isEthicsQuestion,
-} from "./ethics-cache.server";
 
 function serverSupabase() {
   const key = process.env.SUPABASE_PUBLISHABLE_KEY!;
@@ -61,22 +57,12 @@ export const getModelAnswer = createServerFn({ method: "POST" })
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const ethics = isEthicsQuestion({
-      question: data.question,
-      paper: data.paper,
-      subject: data.subject,
-    });
-    const exampleBank = ethics.isEthics
-      ? await fetchEthicsExampleBank(data.question)
-      : undefined;
-
     const { system, user } = buildAnswerPrompt({
       question: data.question,
       marks: data.marks,
       words: data.words,
       paper: data.paper,
       subject: data.subject,
-      exampleBank,
     });
 
     const answer = await callLovableChat(apiKey, [

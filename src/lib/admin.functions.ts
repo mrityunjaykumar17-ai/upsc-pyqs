@@ -1,6 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { ADMIN_PASSWORD, ADMIN_USERNAME } from "@/config/admin";
 import { serverPublicSupabase } from "@/lib/prelims.functions";
 
 const Credentials = z.object({
@@ -9,7 +8,9 @@ const Credentials = z.object({
 });
 
 function assertAdmin(c: { username: string; password: string }) {
-  if (c.username !== ADMIN_USERNAME || c.password !== ADMIN_PASSWORD) {
+  const expectedUser = process.env["ADMIN_USERNAME"] || "admin123";
+  const expectedPass = process.env["ADMIN_PASSWORD"] || "qwerty12345";
+  if (c.username !== expectedUser || c.password !== expectedPass) {
     throw new Error("Invalid admin credentials");
   }
 }
@@ -123,61 +124,6 @@ export const adminDeleteQuestion = createServerFn({ method: "POST" })
     assertAdmin(data);
     const supabaseAdmin = await writeClient();
     const { error } = await supabaseAdmin.from("prelims_questions").delete().eq("id", data.id);
-    if (error) throw new Error(error.message);
-    return { ok: true };
-  });
-
-const MainsInput = z.object({
-  id: z.string().uuid().optional(),
-  year: z.number().int().min(1990).max(2100).nullable(),
-  paper: z.string().max(60).nullable(),
-  subject: z.string().max(80).nullable(),
-  question_text: z.string().min(1).max(8000),
-  model_answer: z.string().max(60000).nullable(),
-  marks: z.number().int().min(0).max(500).nullable(),
-});
-
-export const adminListMains = createServerFn({ method: "POST" })
-  .inputValidator((i: unknown) => Credentials.parse(i))
-  .handler(async ({ data }) => {
-    assertAdmin(data);
-    const supabaseAdmin = await readClient();
-    const { data: rows, error } = await supabaseAdmin
-      .from("mains_pyqs")
-      .select("id, year, paper, subject, question_text, model_answer, marks")
-      .order("year", { ascending: false })
-      .order("created_at", { ascending: false })
-      .limit(500);
-    if (error) throw new Error(error.message);
-    return rows ?? [];
-  });
-
-export const adminSaveMains = createServerFn({ method: "POST" })
-  .inputValidator((i: unknown) => Credentials.extend({ item: MainsInput }).parse(i))
-  .handler(async ({ data }) => {
-    assertAdmin(data);
-    const supabaseAdmin = await writeClient();
-    const { id, ...fields } = data.item;
-    if (id) {
-      const { error } = await supabaseAdmin.from("mains_pyqs").update(fields).eq("id", id);
-      if (error) throw new Error(error.message);
-      return { ok: true, id };
-    }
-    const { data: created, error } = await supabaseAdmin
-      .from("mains_pyqs")
-      .insert(fields)
-      .select("id")
-      .single();
-    if (error) throw new Error(error.message);
-    return { ok: true, id: created.id };
-  });
-
-export const adminDeleteMains = createServerFn({ method: "POST" })
-  .inputValidator((i: unknown) => Credentials.extend({ id: z.string().uuid() }).parse(i))
-  .handler(async ({ data }) => {
-    assertAdmin(data);
-    const supabaseAdmin = await writeClient();
-    const { error } = await supabaseAdmin.from("mains_pyqs").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
