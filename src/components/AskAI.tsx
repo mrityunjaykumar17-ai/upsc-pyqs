@@ -1,10 +1,11 @@
 import { useState } from "react";
-import ReactMarkdown from "react-markdown";
+import { AnswerMarkdown } from "./AnswerMarkdown";
 import { useServerFn } from "@tanstack/react-start";
-import { askAI } from "../lib/ask-ai.functions";
+import { getModelAnswer } from "../lib/model-answer.functions";
 import { CustomizeAnswer } from "./CustomizeAnswer";
 
 type Props = {
+  id: string;
   question: string;
   marks?: number;
   words?: number;
@@ -13,9 +14,10 @@ type Props = {
 };
 
 export function AskAI(props: Props) {
-  const ask = useServerFn(askAI);
+  const fetchAnswer = useServerFn(getModelAnswer);
   const [state, setState] = useState<"idle" | "loading" | "done" | "error">("idle");
   const [answer, setAnswer] = useState("");
+  const [source, setSource] = useState<string>("");
   const [error, setError] = useState("");
   const [customizeOpen, setCustomizeOpen] = useState(false);
 
@@ -24,8 +26,9 @@ export function AskAI(props: Props) {
     setError("");
     setAnswer("");
     try {
-      const res = await ask({ data: props });
+      const res = await fetchAnswer({ data: props });
       setAnswer(res.answer);
+      setSource(res.source ?? "");
       setState("done");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
@@ -41,13 +44,13 @@ export function AskAI(props: Props) {
             onClick={run}
             className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90"
           >
-            <span>✨</span> Ask AI
+            <span>📖</span> Answer
           </button>
           <button
             onClick={() => setCustomizeOpen(true)}
             className="inline-flex items-center gap-1.5 rounded-md border border-primary/40 bg-background px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/5"
           >
-            <span>⚙</span> Customize
+            <span>✨</span> Ask AI
           </button>
         </div>
       )}
@@ -55,7 +58,7 @@ export function AskAI(props: Props) {
       {state === "loading" && (
         <div className="inline-flex items-center gap-2 rounded-md bg-secondary px-3 py-1.5 text-xs text-muted-foreground">
           <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
-          Generating UPSC-format answer…
+          Loading model answer…
         </div>
       )}
 
@@ -72,35 +75,38 @@ export function AskAI(props: Props) {
         <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
           <div className="mb-2 flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-primary">
-              ✨ AI Model Answer
+              📖 Model Answer{source === "ai" ? " (AI)" : ""}
             </span>
             <div className="flex gap-2">
               <button
                 onClick={() => setCustomizeOpen(true)}
                 className="text-xs text-primary hover:underline"
               >
-                Customize
+                Ask AI
               </button>
               <button
                 onClick={run}
                 className="text-xs text-muted-foreground hover:text-foreground"
               >
-                Regenerate
+                Reload
               </button>
             </div>
           </div>
-          <div className="upsc-answer text-sm leading-relaxed text-foreground">
-            <ReactMarkdown>{answer}</ReactMarkdown>
-          </div>
+          <AnswerMarkdown>{answer}</AnswerMarkdown>
           <p className="mt-3 text-[10px] italic text-muted-foreground">
-            AI-generated. Verify facts before use in your actual answers.
+            Curated from topper copies & model answer compilations. Verify facts before use.
           </p>
         </div>
       )}
 
       {customizeOpen && (
         <CustomizeAnswer
-          {...props}
+          id={props.id}
+          question={props.question}
+          marks={props.marks}
+          words={props.words}
+          paper={props.paper}
+          subject={props.subject}
           previousAnswer={answer || undefined}
           onClose={() => setCustomizeOpen(false)}
         />

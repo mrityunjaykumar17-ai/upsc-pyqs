@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import ReactMarkdown from "react-markdown";
+import { AnswerMarkdown } from "./AnswerMarkdown";
 import { useServerFn } from "@tanstack/react-start";
 import { customizeAI } from "../lib/customize-ai.functions";
 
 type Props = {
+  id?: string;
   question: string;
   marks?: number;
   words?: number;
@@ -86,6 +87,7 @@ export function CustomizeAnswer(props: Props) {
     try {
       const res = await customize({
         data: {
+          id: props.id,
           question: props.question,
           marks: props.marks,
           words: props.words,
@@ -153,9 +155,7 @@ export function CustomizeAnswer(props: Props) {
                 <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-primary">
                   ✨ Customized answer
                 </div>
-                <div className="upsc-answer text-sm leading-relaxed text-foreground">
-                  <ReactMarkdown>{t.content}</ReactMarkdown>
-                </div>
+                <AnswerMarkdown>{t.content}</AnswerMarkdown>
               </div>
             ),
           )}
