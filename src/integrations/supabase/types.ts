@@ -184,6 +184,207 @@ export type Database = {
         }
         Relationships: []
       }
+      model_answers: {
+        Row: {
+          answer_md: string
+          created_at: string
+          id: string
+          paper_slug: string
+          question_number: number | null
+          question_text: string
+          source: string
+          subject_slug: string | null
+          updated_at: string
+          year: number | null
+        }
+        Insert: {
+          answer_md: string
+          created_at?: string
+          id: string
+          paper_slug: string
+          question_number?: number | null
+          question_text: string
+          source?: string
+          subject_slug?: string | null
+          updated_at?: string
+          year?: number | null
+        }
+        Update: {
+          answer_md?: string
+          created_at?: string
+          id?: string
+          paper_slug?: string
+          question_number?: number | null
+          question_text?: string
+          source?: string
+          subject_slug?: string | null
+          updated_at?: string
+          year?: number | null
+        }
+        Relationships: []
+      }
+      prelims_attempts: {
+        Row: {
+          accuracy: number | null
+          correct_count: number | null
+          created_at: string
+          duration_seconds: number | null
+          id: string
+          incorrect_count: number | null
+          max_score: number | null
+          mode: string
+          score: number | null
+          started_at: string
+          subject: string | null
+          submitted_at: string | null
+          total_scored: number | null
+          unattempted_count: number | null
+          updated_at: string
+          user_id: string
+          year: number | null
+        }
+        Insert: {
+          accuracy?: number | null
+          correct_count?: number | null
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          incorrect_count?: number | null
+          max_score?: number | null
+          mode: string
+          score?: number | null
+          started_at?: string
+          subject?: string | null
+          submitted_at?: string | null
+          total_scored?: number | null
+          unattempted_count?: number | null
+          updated_at?: string
+          user_id: string
+          year?: number | null
+        }
+        Update: {
+          accuracy?: number | null
+          correct_count?: number | null
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          incorrect_count?: number | null
+          max_score?: number | null
+          mode?: string
+          score?: number | null
+          started_at?: string
+          subject?: string | null
+          submitted_at?: string | null
+          total_scored?: number | null
+          unattempted_count?: number | null
+          updated_at?: string
+          user_id?: string
+          year?: number | null
+        }
+        Relationships: []
+      }
+      prelims_questions: {
+        Row: {
+          comments: string | null
+          correct_option: string | null
+          created_at: string
+          id: string
+          is_dropped: boolean
+          needs_review: boolean
+          option_a: string
+          option_b: string
+          option_c: string
+          option_d: string
+          question_text: string
+          serial_no: number
+          subject: string
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          comments?: string | null
+          correct_option?: string | null
+          created_at?: string
+          id?: string
+          is_dropped?: boolean
+          needs_review?: boolean
+          option_a?: string
+          option_b?: string
+          option_c?: string
+          option_d?: string
+          question_text: string
+          serial_no: number
+          subject: string
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          comments?: string | null
+          correct_option?: string | null
+          created_at?: string
+          id?: string
+          is_dropped?: boolean
+          needs_review?: boolean
+          option_a?: string
+          option_b?: string
+          option_c?: string
+          option_d?: string
+          question_text?: string
+          serial_no?: number
+          subject?: string
+          updated_at?: string
+          year?: number
+        }
+        Relationships: []
+      }
+      prelims_responses: {
+        Row: {
+          attempt_id: string
+          created_at: string
+          flagged: boolean
+          id: string
+          is_correct: boolean | null
+          question_id: string
+          selected_option: string | null
+          user_id: string
+        }
+        Insert: {
+          attempt_id: string
+          created_at?: string
+          flagged?: boolean
+          id?: string
+          is_correct?: boolean | null
+          question_id: string
+          selected_option?: string | null
+          user_id: string
+        }
+        Update: {
+          attempt_id?: string
+          created_at?: string
+          flagged?: boolean
+          id?: string
+          is_correct?: boolean | null
+          question_id?: string
+          selected_option?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prelims_responses_attempt_id_fkey"
+            columns: ["attempt_id"]
+            isOneToOne: false
+            referencedRelation: "prelims_attempts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prelims_responses_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "prelims_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
