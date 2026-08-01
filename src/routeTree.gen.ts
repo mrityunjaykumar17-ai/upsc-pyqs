@@ -12,11 +12,16 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as EvaluateRouteImport } from './routes/evaluate'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PrelimsIndexRouteImport } from './routes/prelims.index'
 import { Route as QuestionIdRouteImport } from './routes/question.$id'
 import { Route as GsPaperRouteImport } from './routes/gs.$paper'
 import { Route as GsPaperIndexRouteImport } from './routes/gs.$paper.index'
+import { Route as PrelimsYearYearRouteImport } from './routes/prelims.year.$year'
+import { Route as PrelimsSubjectSubjectRouteImport } from './routes/prelims.subject.$subject'
+import { Route as PrelimsResultAttemptIdRouteImport } from './routes/prelims.result.$attemptId'
 import { Route as GsPaperSubjectRouteImport } from './routes/gs.$paper.$subject'
 import { Route as AuthenticatedEvaluateUploadRouteImport } from './routes/_authenticated/evaluate.upload'
 import { Route as AuthenticatedEvaluateHistoryRouteImport } from './routes/_authenticated/evaluate.history'
@@ -39,6 +44,11 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
@@ -46,6 +56,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrelimsIndexRoute = PrelimsIndexRouteImport.update({
+  id: '/prelims/',
+  path: '/prelims/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const QuestionIdRoute = QuestionIdRouteImport.update({
@@ -62,6 +77,21 @@ const GsPaperIndexRoute = GsPaperIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => GsPaperRoute,
+} as any)
+const PrelimsYearYearRoute = PrelimsYearYearRouteImport.update({
+  id: '/prelims/year/$year',
+  path: '/prelims/year/$year',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrelimsSubjectSubjectRoute = PrelimsSubjectSubjectRouteImport.update({
+  id: '/prelims/subject/$subject',
+  path: '/prelims/subject/$subject',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrelimsResultAttemptIdRoute = PrelimsResultAttemptIdRouteImport.update({
+  id: '/prelims/result/$attemptId',
+  path: '/prelims/result/$attemptId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const GsPaperSubjectRoute = GsPaperSubjectRouteImport.update({
   id: '/$subject',
@@ -98,28 +128,38 @@ const GsPaperSubjectYearRoute = GsPaperSubjectYearRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/evaluate': typeof EvaluateRoute
   '/gs/$paper': typeof GsPaperRouteWithChildren
   '/question/$id': typeof QuestionIdRoute
+  '/prelims/': typeof PrelimsIndexRoute
   '/evaluate/$id': typeof AuthenticatedEvaluateIdRoute
   '/evaluate/history': typeof AuthenticatedEvaluateHistoryRoute
   '/evaluate/upload': typeof AuthenticatedEvaluateUploadRoute
   '/gs/$paper/$subject': typeof GsPaperSubjectRouteWithChildren
+  '/prelims/result/$attemptId': typeof PrelimsResultAttemptIdRoute
+  '/prelims/subject/$subject': typeof PrelimsSubjectSubjectRoute
+  '/prelims/year/$year': typeof PrelimsYearYearRoute
   '/gs/$paper/': typeof GsPaperIndexRoute
   '/gs/$paper/$subject/$year': typeof GsPaperSubjectYearRoute
   '/gs/$paper/$subject/': typeof GsPaperSubjectIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/evaluate': typeof EvaluateRoute
   '/question/$id': typeof QuestionIdRoute
+  '/prelims': typeof PrelimsIndexRoute
   '/evaluate/$id': typeof AuthenticatedEvaluateIdRoute
   '/evaluate/history': typeof AuthenticatedEvaluateHistoryRoute
   '/evaluate/upload': typeof AuthenticatedEvaluateUploadRoute
+  '/prelims/result/$attemptId': typeof PrelimsResultAttemptIdRoute
+  '/prelims/subject/$subject': typeof PrelimsSubjectSubjectRoute
+  '/prelims/year/$year': typeof PrelimsYearYearRoute
   '/gs/$paper': typeof GsPaperIndexRoute
   '/gs/$paper/$subject/$year': typeof GsPaperSubjectYearRoute
   '/gs/$paper/$subject': typeof GsPaperSubjectIndexRoute
@@ -128,15 +168,20 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/evaluate': typeof EvaluateRoute
   '/gs/$paper': typeof GsPaperRouteWithChildren
   '/question/$id': typeof QuestionIdRoute
+  '/prelims/': typeof PrelimsIndexRoute
   '/_authenticated/evaluate/$id': typeof AuthenticatedEvaluateIdRoute
   '/_authenticated/evaluate/history': typeof AuthenticatedEvaluateHistoryRoute
   '/_authenticated/evaluate/upload': typeof AuthenticatedEvaluateUploadRoute
   '/gs/$paper/$subject': typeof GsPaperSubjectRouteWithChildren
+  '/prelims/result/$attemptId': typeof PrelimsResultAttemptIdRoute
+  '/prelims/subject/$subject': typeof PrelimsSubjectSubjectRoute
+  '/prelims/year/$year': typeof PrelimsYearYearRoute
   '/gs/$paper/': typeof GsPaperIndexRoute
   '/gs/$paper/$subject/$year': typeof GsPaperSubjectYearRoute
   '/gs/$paper/$subject/': typeof GsPaperSubjectIndexRoute
@@ -145,28 +190,38 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/auth'
     | '/contact'
     | '/evaluate'
     | '/gs/$paper'
     | '/question/$id'
+    | '/prelims/'
     | '/evaluate/$id'
     | '/evaluate/history'
     | '/evaluate/upload'
     | '/gs/$paper/$subject'
+    | '/prelims/result/$attemptId'
+    | '/prelims/subject/$subject'
+    | '/prelims/year/$year'
     | '/gs/$paper/'
     | '/gs/$paper/$subject/$year'
     | '/gs/$paper/$subject/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin'
     | '/auth'
     | '/contact'
     | '/evaluate'
     | '/question/$id'
+    | '/prelims'
     | '/evaluate/$id'
     | '/evaluate/history'
     | '/evaluate/upload'
+    | '/prelims/result/$attemptId'
+    | '/prelims/subject/$subject'
+    | '/prelims/year/$year'
     | '/gs/$paper'
     | '/gs/$paper/$subject/$year'
     | '/gs/$paper/$subject'
@@ -174,15 +229,20 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/admin'
     | '/auth'
     | '/contact'
     | '/evaluate'
     | '/gs/$paper'
     | '/question/$id'
+    | '/prelims/'
     | '/_authenticated/evaluate/$id'
     | '/_authenticated/evaluate/history'
     | '/_authenticated/evaluate/upload'
     | '/gs/$paper/$subject'
+    | '/prelims/result/$attemptId'
+    | '/prelims/subject/$subject'
+    | '/prelims/year/$year'
     | '/gs/$paper/'
     | '/gs/$paper/$subject/$year'
     | '/gs/$paper/$subject/'
@@ -191,11 +251,16 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AdminRoute: typeof AdminRoute
   AuthRoute: typeof AuthRoute
   ContactRoute: typeof ContactRoute
   EvaluateRoute: typeof EvaluateRoute
   GsPaperRoute: typeof GsPaperRouteWithChildren
   QuestionIdRoute: typeof QuestionIdRoute
+  PrelimsIndexRoute: typeof PrelimsIndexRoute
+  PrelimsResultAttemptIdRoute: typeof PrelimsResultAttemptIdRoute
+  PrelimsSubjectSubjectRoute: typeof PrelimsSubjectSubjectRoute
+  PrelimsYearYearRoute: typeof PrelimsYearYearRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -221,6 +286,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated': {
       id: '/_authenticated'
       path: ''
@@ -233,6 +305,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/prelims/': {
+      id: '/prelims/'
+      path: '/prelims'
+      fullPath: '/prelims/'
+      preLoaderRoute: typeof PrelimsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/question/$id': {
@@ -255,6 +334,27 @@ declare module '@tanstack/react-router' {
       fullPath: '/gs/$paper/'
       preLoaderRoute: typeof GsPaperIndexRouteImport
       parentRoute: typeof GsPaperRoute
+    }
+    '/prelims/year/$year': {
+      id: '/prelims/year/$year'
+      path: '/prelims/year/$year'
+      fullPath: '/prelims/year/$year'
+      preLoaderRoute: typeof PrelimsYearYearRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/prelims/subject/$subject': {
+      id: '/prelims/subject/$subject'
+      path: '/prelims/subject/$subject'
+      fullPath: '/prelims/subject/$subject'
+      preLoaderRoute: typeof PrelimsSubjectSubjectRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/prelims/result/$attemptId': {
+      id: '/prelims/result/$attemptId'
+      path: '/prelims/result/$attemptId'
+      fullPath: '/prelims/result/$attemptId'
+      preLoaderRoute: typeof PrelimsResultAttemptIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/gs/$paper/$subject': {
       id: '/gs/$paper/$subject'
@@ -346,12 +446,27 @@ const GsPaperRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AdminRoute: AdminRoute,
   AuthRoute: AuthRoute,
   ContactRoute: ContactRoute,
   EvaluateRoute: EvaluateRoute,
   GsPaperRoute: GsPaperRouteWithChildren,
   QuestionIdRoute: QuestionIdRoute,
+  PrelimsIndexRoute: PrelimsIndexRoute,
+  PrelimsResultAttemptIdRoute: PrelimsResultAttemptIdRoute,
+  PrelimsSubjectSubjectRoute: PrelimsSubjectSubjectRoute,
+  PrelimsYearYearRoute: PrelimsYearYearRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
