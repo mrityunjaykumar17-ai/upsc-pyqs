@@ -135,7 +135,14 @@ function YearPage() {
                       View details →
                     </Link>
                   </div>
-                  <AskAI question={question.q} marks={question.marks} words={question.words} />
+                  <AskAI
+                    id={makeQuestionId(paper.slug, subject.slug, yearBlock.year, question.n)}
+                    question={question.q}
+                    marks={question.marks}
+                    words={question.words}
+                    paper={paper.name}
+                    subject={subject.name}
+                  />
                 </div>
               </div>
             </li>

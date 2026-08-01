@@ -1,11 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { buildAnswerPrompt, callLovableChat } from "./answer-prompt";
+import { cacheModelAnswerIfMissing } from "./model-answer-cache.server";
 
 type ChatMsg = { role: "user" | "assistant"; content: string };
 
 export const customizeAI = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => {
     const d = input as {
+      id?: string;
       question?: string;
       marks?: number;
       words?: number;
@@ -22,6 +24,7 @@ export const customizeAI = createServerFn({ method: "POST" })
       throw new Error("Tell the AI how to customize the answer.");
     }
     return {
+      id: typeof d.id === "string" ? d.id : undefined,
       question: d.question,
       marks: typeof d.marks === "number" ? d.marks : undefined,
       words: typeof d.words === "number" ? d.words : undefined,
@@ -81,5 +84,17 @@ You are now in a customization chat. The user will iteratively refine the answer
     ];
 
     const answer = await callLovableChat(apiKey, messages);
+
+    // Persist the first AI answer for this question so the "Answer" button
+    // never has to call the model again.
+    if (data.id) {
+      await cacheModelAnswerIfMissing({
+        id: data.id,
+        question: data.question,
+        paper: data.paper,
+        answer,
+      });
+    }
+
     return { answer };
   });

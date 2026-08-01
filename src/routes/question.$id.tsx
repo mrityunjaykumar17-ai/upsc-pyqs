@@ -122,6 +122,7 @@ function QuestionDetail() {
         >
           <div className="rounded-xl border border-border bg-card p-5">
             <AskAI
+              id={id}
               question={question.q}
               marks={question.marks}
               words={question.words}

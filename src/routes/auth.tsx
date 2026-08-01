@@ -17,10 +17,23 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
+  // Where to land after a successful sign-in: the page the user came from,
+  // falling back to the home page (never a hardcoded feature page).
+  function destination() {
+    const stored = typeof window !== "undefined" ? sessionStorage.getItem("post_login_redirect") : null;
+    const dest = redirectTo || stored || "/";
+    return dest.startsWith("/") && !dest.startsWith("//") && !dest.startsWith("/auth") ? dest : "/";
+  }
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: redirectTo || "/evaluate/upload" });
+      if (data.session) {
+        const dest = destination();
+        sessionStorage.removeItem("post_login_redirect");
+        navigate({ to: dest, replace: true });
+      }
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate, redirectTo]);
 
   async function handleGoogle() {
@@ -28,27 +41,31 @@ function AuthPage() {
     try {
       if (redirectTo) sessionStorage.setItem("post_login_redirect", redirectTo);
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin + "/auth",
+        redirect_uri:
+          window.location.origin +
+          "/auth" +
+          (redirectTo ? `?redirect=${encodeURIComponent(redirectTo)}` : ""),
       });
       if (result.error) { setErr(result.error.message || "Google sign-in failed"); setBusy(false); return; }
       if (result.redirected) return;
-      const dest = sessionStorage.getItem("post_login_redirect") || redirectTo || "/evaluate/upload";
+      const dest = destination();
       sessionStorage.removeItem("post_login_redirect");
-      navigate({ to: dest });
+      navigate({ to: dest, replace: true });
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Sign-in failed");
       setBusy(false);
     }
   }
 
+
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
       <main className="mx-auto max-w-md px-6 py-16">
         <div className="rounded-2xl border border-border bg-card p-8">
-          <h1 className="text-2xl font-bold tracking-tight">Sign in to evaluate your answers</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Sign in</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Get an AI-powered evaluation of your handwritten UPSC Mains answer sheets — just like a senior mentor would give.
+            Sign in with Google to save your prelims practice attempts and get AI evaluation of your handwritten Mains answers. You will return to the page you came from.
           </p>
           <div className="mt-6 space-y-3">
             <button
