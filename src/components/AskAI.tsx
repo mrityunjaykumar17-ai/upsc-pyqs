@@ -18,6 +18,7 @@ export function AskAI(props: Props) {
   const [state, setState] = useState<"idle" | "loading" | "done" | "error">("idle");
   const [answer, setAnswer] = useState("");
   const [source, setSource] = useState<string>("");
+  const [keywords, setKeywords] = useState<string[] | null>(null);
   const [error, setError] = useState("");
   const [customizeOpen, setCustomizeOpen] = useState(false);
 
@@ -29,6 +30,7 @@ export function AskAI(props: Props) {
       const res = await fetchAnswer({ data: props });
       setAnswer(res.answer);
       setSource(res.source ?? "");
+      setKeywords(res.keywords ?? null);
       setState("done");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
@@ -92,7 +94,7 @@ export function AskAI(props: Props) {
               </button>
             </div>
           </div>
-          <AnswerMarkdown>{answer}</AnswerMarkdown>
+          <AnswerMarkdown keywords={keywords}>{answer}</AnswerMarkdown>
           <p className="mt-3 text-[10px] italic text-muted-foreground">
             Curated from topper copies & model answer compilations. Verify facts before use.
           </p>
