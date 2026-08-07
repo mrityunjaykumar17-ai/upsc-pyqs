@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SociologyIndexRouteImport } from './routes/sociology.index'
 import { Route as PrelimsIndexRouteImport } from './routes/prelims.index'
 import { Route as QuestionIdRouteImport } from './routes/question.$id'
 import { Route as GsPaperRouteImport } from './routes/gs.$paper'
@@ -27,6 +28,7 @@ import { Route as AuthenticatedEvaluateUploadRouteImport } from './routes/_authe
 import { Route as AuthenticatedEvaluateHistoryRouteImport } from './routes/_authenticated/evaluate.history'
 import { Route as AuthenticatedEvaluateIdRouteImport } from './routes/_authenticated/evaluate.$id'
 import { Route as GsPaperSubjectIndexRouteImport } from './routes/gs.$paper.$subject.index'
+import { Route as SociologyPaperChapterTopicRouteImport } from './routes/sociology.$paper.$chapter.$topic'
 import { Route as GsPaperSubjectYearRouteImport } from './routes/gs.$paper.$subject.$year'
 
 const EvaluateRoute = EvaluateRouteImport.update({
@@ -56,6 +58,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SociologyIndexRoute = SociologyIndexRouteImport.update({
+  id: '/sociology/',
+  path: '/sociology/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrelimsIndexRoute = PrelimsIndexRouteImport.update({
@@ -120,6 +127,12 @@ const GsPaperSubjectIndexRoute = GsPaperSubjectIndexRouteImport.update({
   path: '/',
   getParentRoute: () => GsPaperSubjectRoute,
 } as any)
+const SociologyPaperChapterTopicRoute =
+  SociologyPaperChapterTopicRouteImport.update({
+    id: '/sociology/$paper/$chapter/$topic',
+    path: '/sociology/$paper/$chapter/$topic',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const GsPaperSubjectYearRoute = GsPaperSubjectYearRouteImport.update({
   id: '/$year',
   path: '/$year',
@@ -135,6 +148,7 @@ export interface FileRoutesByFullPath {
   '/gs/$paper': typeof GsPaperRouteWithChildren
   '/question/$id': typeof QuestionIdRoute
   '/prelims/': typeof PrelimsIndexRoute
+  '/sociology/': typeof SociologyIndexRoute
   '/evaluate/$id': typeof AuthenticatedEvaluateIdRoute
   '/evaluate/history': typeof AuthenticatedEvaluateHistoryRoute
   '/evaluate/upload': typeof AuthenticatedEvaluateUploadRoute
@@ -144,6 +158,7 @@ export interface FileRoutesByFullPath {
   '/prelims/year/$year': typeof PrelimsYearYearRoute
   '/gs/$paper/': typeof GsPaperIndexRoute
   '/gs/$paper/$subject/$year': typeof GsPaperSubjectYearRoute
+  '/sociology/$paper/$chapter/$topic': typeof SociologyPaperChapterTopicRoute
   '/gs/$paper/$subject/': typeof GsPaperSubjectIndexRoute
 }
 export interface FileRoutesByTo {
@@ -154,6 +169,7 @@ export interface FileRoutesByTo {
   '/evaluate': typeof EvaluateRoute
   '/question/$id': typeof QuestionIdRoute
   '/prelims': typeof PrelimsIndexRoute
+  '/sociology': typeof SociologyIndexRoute
   '/evaluate/$id': typeof AuthenticatedEvaluateIdRoute
   '/evaluate/history': typeof AuthenticatedEvaluateHistoryRoute
   '/evaluate/upload': typeof AuthenticatedEvaluateUploadRoute
@@ -162,6 +178,7 @@ export interface FileRoutesByTo {
   '/prelims/year/$year': typeof PrelimsYearYearRoute
   '/gs/$paper': typeof GsPaperIndexRoute
   '/gs/$paper/$subject/$year': typeof GsPaperSubjectYearRoute
+  '/sociology/$paper/$chapter/$topic': typeof SociologyPaperChapterTopicRoute
   '/gs/$paper/$subject': typeof GsPaperSubjectIndexRoute
 }
 export interface FileRoutesById {
@@ -175,6 +192,7 @@ export interface FileRoutesById {
   '/gs/$paper': typeof GsPaperRouteWithChildren
   '/question/$id': typeof QuestionIdRoute
   '/prelims/': typeof PrelimsIndexRoute
+  '/sociology/': typeof SociologyIndexRoute
   '/_authenticated/evaluate/$id': typeof AuthenticatedEvaluateIdRoute
   '/_authenticated/evaluate/history': typeof AuthenticatedEvaluateHistoryRoute
   '/_authenticated/evaluate/upload': typeof AuthenticatedEvaluateUploadRoute
@@ -184,6 +202,7 @@ export interface FileRoutesById {
   '/prelims/year/$year': typeof PrelimsYearYearRoute
   '/gs/$paper/': typeof GsPaperIndexRoute
   '/gs/$paper/$subject/$year': typeof GsPaperSubjectYearRoute
+  '/sociology/$paper/$chapter/$topic': typeof SociologyPaperChapterTopicRoute
   '/gs/$paper/$subject/': typeof GsPaperSubjectIndexRoute
 }
 export interface FileRouteTypes {
@@ -197,6 +216,7 @@ export interface FileRouteTypes {
     | '/gs/$paper'
     | '/question/$id'
     | '/prelims/'
+    | '/sociology/'
     | '/evaluate/$id'
     | '/evaluate/history'
     | '/evaluate/upload'
@@ -206,6 +226,7 @@ export interface FileRouteTypes {
     | '/prelims/year/$year'
     | '/gs/$paper/'
     | '/gs/$paper/$subject/$year'
+    | '/sociology/$paper/$chapter/$topic'
     | '/gs/$paper/$subject/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -216,6 +237,7 @@ export interface FileRouteTypes {
     | '/evaluate'
     | '/question/$id'
     | '/prelims'
+    | '/sociology'
     | '/evaluate/$id'
     | '/evaluate/history'
     | '/evaluate/upload'
@@ -224,6 +246,7 @@ export interface FileRouteTypes {
     | '/prelims/year/$year'
     | '/gs/$paper'
     | '/gs/$paper/$subject/$year'
+    | '/sociology/$paper/$chapter/$topic'
     | '/gs/$paper/$subject'
   id:
     | '__root__'
@@ -236,6 +259,7 @@ export interface FileRouteTypes {
     | '/gs/$paper'
     | '/question/$id'
     | '/prelims/'
+    | '/sociology/'
     | '/_authenticated/evaluate/$id'
     | '/_authenticated/evaluate/history'
     | '/_authenticated/evaluate/upload'
@@ -245,6 +269,7 @@ export interface FileRouteTypes {
     | '/prelims/year/$year'
     | '/gs/$paper/'
     | '/gs/$paper/$subject/$year'
+    | '/sociology/$paper/$chapter/$topic'
     | '/gs/$paper/$subject/'
   fileRoutesById: FileRoutesById
 }
@@ -258,9 +283,11 @@ export interface RootRouteChildren {
   GsPaperRoute: typeof GsPaperRouteWithChildren
   QuestionIdRoute: typeof QuestionIdRoute
   PrelimsIndexRoute: typeof PrelimsIndexRoute
+  SociologyIndexRoute: typeof SociologyIndexRoute
   PrelimsResultAttemptIdRoute: typeof PrelimsResultAttemptIdRoute
   PrelimsSubjectSubjectRoute: typeof PrelimsSubjectSubjectRoute
   PrelimsYearYearRoute: typeof PrelimsYearYearRoute
+  SociologyPaperChapterTopicRoute: typeof SociologyPaperChapterTopicRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -305,6 +332,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sociology/': {
+      id: '/sociology/'
+      path: '/sociology'
+      fullPath: '/sociology/'
+      preLoaderRoute: typeof SociologyIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/prelims/': {
@@ -391,6 +425,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GsPaperSubjectIndexRouteImport
       parentRoute: typeof GsPaperSubjectRoute
     }
+    '/sociology/$paper/$chapter/$topic': {
+      id: '/sociology/$paper/$chapter/$topic'
+      path: '/sociology/$paper/$chapter/$topic'
+      fullPath: '/sociology/$paper/$chapter/$topic'
+      preLoaderRoute: typeof SociologyPaperChapterTopicRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/gs/$paper/$subject/$year': {
       id: '/gs/$paper/$subject/$year'
       path: '/$year'
@@ -453,9 +494,11 @@ const rootRouteChildren: RootRouteChildren = {
   GsPaperRoute: GsPaperRouteWithChildren,
   QuestionIdRoute: QuestionIdRoute,
   PrelimsIndexRoute: PrelimsIndexRoute,
+  SociologyIndexRoute: SociologyIndexRoute,
   PrelimsResultAttemptIdRoute: PrelimsResultAttemptIdRoute,
   PrelimsSubjectSubjectRoute: PrelimsSubjectSubjectRoute,
   PrelimsYearYearRoute: PrelimsYearYearRoute,
+  SociologyPaperChapterTopicRoute: SociologyPaperChapterTopicRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

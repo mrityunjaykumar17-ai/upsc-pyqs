@@ -45,13 +45,19 @@ export const getModelAnswer = createServerFn({ method: "POST" })
     const supabase = serverSupabase();
     const { data: cached, error } = await supabase
       .from("model_answers")
-      .select("answer_md, source")
+      .select("answer_md, source, keywords")
       .eq("id", data.id)
       .maybeSingle();
     if (error) console.warn("model_answers lookup failed:", error.message);
     if (cached?.answer_md) {
-      return { answer: cached.answer_md, source: cached.source, cached: true };
+      return {
+        answer: cached.answer_md,
+        source: cached.source,
+        keywords: (cached as { keywords?: string[] | null }).keywords ?? null,
+        cached: true,
+      };
     }
+
 
     // Fallback: generate a topper-style answer with AI and cache it.
     const apiKey = process.env.LOVABLE_API_KEY;
@@ -78,5 +84,5 @@ export const getModelAnswer = createServerFn({ method: "POST" })
     });
 
 
-    return { answer, source: "ai" as const, cached: false };
+    return { answer, source: "ai" as const, keywords: null, cached: false };
   });

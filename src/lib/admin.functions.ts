@@ -159,7 +159,9 @@ export const adminGetModelAnswer = createServerFn({ method: "POST" })
     const client = await readClient();
     const { data: row, error } = await client
       .from("model_answers")
-      .select("id, paper_slug, subject_slug, year, question_number, question_text, answer_md, source, updated_at")
+      .select(
+        "id, paper_slug, subject_slug, year, question_number, question_text, answer_md, keywords, source, updated_at",
+      )
       .eq("id", data.id)
       .maybeSingle();
     if (error) throw new Error(error.message);
@@ -174,6 +176,7 @@ const ModelAnswerInput = z.object({
   question_number: z.number().int().min(0).max(1000).nullable(),
   question_text: z.string().min(1).max(8000),
   answer_md: z.string().min(1).max(120000),
+  keywords: z.array(z.string().min(1).max(80)).max(30).nullable().optional(),
   source: z.string().max(20).optional(),
 });
 
@@ -182,12 +185,15 @@ export const adminSaveModelAnswer = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     assertAdmin(data);
     const supabaseAdmin = await writeClient();
-    const { error } = await supabaseAdmin
-      .from("model_answers")
-      .upsert({ ...data.item, source: data.item.source ?? "manual" });
+    const { error } = await supabaseAdmin.from("model_answers").upsert({
+      ...data.item,
+      keywords: data.item.keywords?.length ? data.item.keywords : null,
+      source: data.item.source ?? "manual",
+    });
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
 
 export const adminDeleteModelAnswer = createServerFn({ method: "POST" })
   .inputValidator((i: unknown) => Credentials.extend({ id: z.string().min(1).max(200) }).parse(i))
@@ -244,4 +250,49 @@ export const adminGenerateModelAnswer = createServerFn({ method: "POST" })
     });
     if (error) throw new Error(error.message);
     return { ok: true, answer_md: answer };
+  });
+
+/* ------------------------------------------------------------------ *
+ * Sociology optional PYQs (answers reuse the model_answers table)     *
+ * ------------------------------------------------------------------ */
+
+export const adminListSociologyQuestions = createServerFn({ method: "POST" })
+  .inputValidator((i: unknown) =>
+    Credentials.extend({
+      paper: z.number().int().min(1).max(2).nullable().optional(),
+      chapter: z.string().max(80).nullable().optional(),
+      search: z.string().max(200).optional(),
+      limit: z.number().int().min(1).max(1000).optional(),
+    }).parse(i),
+  )
+  .handler(async ({ data }) => {
+    assertAdmin(data);
+    const client = await readClient();
+    let q = client
+      .from("sociology_questions")
+      .select(
+        "id, paper, chapter, chapter_slug, topic, topic_slug, question_text, year, question_number, marks",
+      );
+    if (data.paper) q = q.eq("paper", data.paper);
+    if (data.chapter) q = q.eq("chapter_slug", data.chapter);
+    if (data.search) q = q.ilike("question_text", `%${data.search}%`);
+    const { data: rows, error } = await q
+      .order("paper", { ascending: true })
+      .order("chapter_order", { ascending: true })
+      .order("topic_order", { ascending: true })
+      .order("year", { ascending: false })
+      .limit(data.limit ?? 800);
+    if (error) throw new Error(error.message);
+    return (rows ?? []) as {
+      id: string;
+      paper: number;
+      chapter: string;
+      chapter_slug: string;
+      topic: string;
+      topic_slug: string;
+      question_text: string;
+      year: number | null;
+      question_number: string | null;
+      marks: number | null;
+    }[];
   });

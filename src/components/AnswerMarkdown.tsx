@@ -6,9 +6,18 @@ import { splitAnswer } from "@/lib/answer-keywords";
  * Shared renderer for UPSC model answers. Adds GFM support (tables,
  * strikethrough, task lists) on top of the `.upsc-answer` typography, and
  * always surfaces exam-ready keywords beneath the answer.
+ *
+ * `keywords` overrides the auto-derived list (admins can curate them per answer).
  */
-export function AnswerMarkdown({ children }: { children: string }) {
-  const { body, keywords } = splitAnswer(children);
+export function AnswerMarkdown({
+  children,
+  keywords: curated,
+}: {
+  children: string;
+  keywords?: string[] | null;
+}) {
+  const { body, keywords: derived } = splitAnswer(children);
+  const keywords = curated?.length ? curated : derived;
   return (
     <div>
       <div className="upsc-answer text-sm leading-relaxed text-foreground">
