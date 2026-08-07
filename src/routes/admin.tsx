@@ -150,7 +150,7 @@ function LoginCard({ onSuccess }: { onSuccess: (c: Creds) => void }) {
 }
 
 function Dashboard({ creds, onSignOut }: { creds: Creds; onSignOut: () => void }) {
-  const [tab, setTab] = useState<"prelims" | "mains">("prelims");
+  const [tab, setTab] = useState<"prelims" | "mains" | "sociology">("prelims");
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -167,7 +167,7 @@ function Dashboard({ creds, onSignOut }: { creds: Creds; onSignOut: () => void }
       </div>
 
       <div className="mt-6 inline-flex rounded-lg border border-border bg-card p-1 text-sm">
-        {(["prelims", "mains"] as const).map((t) => (
+        {(["prelims", "mains", "sociology"] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -175,12 +175,21 @@ function Dashboard({ creds, onSignOut }: { creds: Creds; onSignOut: () => void }
               tab === t ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            {t === "prelims" ? "Prelims questions" : "Mains PYQs"}
+            {t === "prelims" ? "Prelims questions" : t === "mains" ? "Mains PYQs" : "Sociology"}
           </button>
         ))}
       </div>
 
-      <div className="mt-6">{tab === "prelims" ? <PrelimsAdmin creds={creds} /> : <MainsAnswersAdmin creds={creds} />}</div>
+      <div className="mt-6">
+        {tab === "prelims" ? (
+          <PrelimsAdmin creds={creds} />
+        ) : tab === "mains" ? (
+          <MainsAnswersAdmin creds={creds} />
+        ) : (
+          <SociologyAnswersAdmin creds={creds} />
+        )}
+      </div>
+
     </div>
   );
 }
