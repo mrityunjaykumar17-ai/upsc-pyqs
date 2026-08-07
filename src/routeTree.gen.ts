@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SociologyIndexRouteImport } from './routes/sociology.index'
 import { Route as PrelimsIndexRouteImport } from './routes/prelims.index'
 import { Route as QuestionIdRouteImport } from './routes/question.$id'
 import { Route as GsPaperRouteImport } from './routes/gs.$paper'
@@ -56,6 +57,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SociologyIndexRoute = SociologyIndexRouteImport.update({
+  id: '/sociology/',
+  path: '/sociology/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrelimsIndexRoute = PrelimsIndexRouteImport.update({
@@ -135,6 +141,7 @@ export interface FileRoutesByFullPath {
   '/gs/$paper': typeof GsPaperRouteWithChildren
   '/question/$id': typeof QuestionIdRoute
   '/prelims/': typeof PrelimsIndexRoute
+  '/sociology/': typeof SociologyIndexRoute
   '/evaluate/$id': typeof AuthenticatedEvaluateIdRoute
   '/evaluate/history': typeof AuthenticatedEvaluateHistoryRoute
   '/evaluate/upload': typeof AuthenticatedEvaluateUploadRoute
@@ -154,6 +161,7 @@ export interface FileRoutesByTo {
   '/evaluate': typeof EvaluateRoute
   '/question/$id': typeof QuestionIdRoute
   '/prelims': typeof PrelimsIndexRoute
+  '/sociology': typeof SociologyIndexRoute
   '/evaluate/$id': typeof AuthenticatedEvaluateIdRoute
   '/evaluate/history': typeof AuthenticatedEvaluateHistoryRoute
   '/evaluate/upload': typeof AuthenticatedEvaluateUploadRoute
@@ -175,6 +183,7 @@ export interface FileRoutesById {
   '/gs/$paper': typeof GsPaperRouteWithChildren
   '/question/$id': typeof QuestionIdRoute
   '/prelims/': typeof PrelimsIndexRoute
+  '/sociology/': typeof SociologyIndexRoute
   '/_authenticated/evaluate/$id': typeof AuthenticatedEvaluateIdRoute
   '/_authenticated/evaluate/history': typeof AuthenticatedEvaluateHistoryRoute
   '/_authenticated/evaluate/upload': typeof AuthenticatedEvaluateUploadRoute
@@ -197,6 +206,7 @@ export interface FileRouteTypes {
     | '/gs/$paper'
     | '/question/$id'
     | '/prelims/'
+    | '/sociology/'
     | '/evaluate/$id'
     | '/evaluate/history'
     | '/evaluate/upload'
@@ -216,6 +226,7 @@ export interface FileRouteTypes {
     | '/evaluate'
     | '/question/$id'
     | '/prelims'
+    | '/sociology'
     | '/evaluate/$id'
     | '/evaluate/history'
     | '/evaluate/upload'
@@ -236,6 +247,7 @@ export interface FileRouteTypes {
     | '/gs/$paper'
     | '/question/$id'
     | '/prelims/'
+    | '/sociology/'
     | '/_authenticated/evaluate/$id'
     | '/_authenticated/evaluate/history'
     | '/_authenticated/evaluate/upload'
@@ -258,6 +270,7 @@ export interface RootRouteChildren {
   GsPaperRoute: typeof GsPaperRouteWithChildren
   QuestionIdRoute: typeof QuestionIdRoute
   PrelimsIndexRoute: typeof PrelimsIndexRoute
+  SociologyIndexRoute: typeof SociologyIndexRoute
   PrelimsResultAttemptIdRoute: typeof PrelimsResultAttemptIdRoute
   PrelimsSubjectSubjectRoute: typeof PrelimsSubjectSubjectRoute
   PrelimsYearYearRoute: typeof PrelimsYearYearRoute
@@ -305,6 +318,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sociology/': {
+      id: '/sociology/'
+      path: '/sociology'
+      fullPath: '/sociology/'
+      preLoaderRoute: typeof SociologyIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/prelims/': {
@@ -453,6 +473,7 @@ const rootRouteChildren: RootRouteChildren = {
   GsPaperRoute: GsPaperRouteWithChildren,
   QuestionIdRoute: QuestionIdRoute,
   PrelimsIndexRoute: PrelimsIndexRoute,
+  SociologyIndexRoute: SociologyIndexRoute,
   PrelimsResultAttemptIdRoute: PrelimsResultAttemptIdRoute,
   PrelimsSubjectSubjectRoute: PrelimsSubjectSubjectRoute,
   PrelimsYearYearRoute: PrelimsYearYearRoute,
@@ -460,13 +481,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

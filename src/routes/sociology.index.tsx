@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/SiteHeader";
-import { getSociologyOutline, PAPER_NAMES } from "@/lib/sociology.functions";
+import { getSociologyOutline, PAPER_NAMES, type SociologyOutline } from "@/lib/sociology.functions";
 
 export const Route = createFileRoute("/sociology/")({
   loader: () => getSociologyOutline(),
@@ -45,7 +45,7 @@ function Shell({ children }: { children: React.ReactNode }) {
 }
 
 function SociologyHome() {
-  const outline = Route.useLoaderData();
+  const outline = Route.useLoaderData() as SociologyOutline;
   const [paper, setPaper] = useState(1);
   const active = outline.find((p) => p.paper === paper);
 
