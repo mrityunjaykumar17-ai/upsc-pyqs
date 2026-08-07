@@ -189,6 +189,7 @@ export type Database = {
           answer_md: string
           created_at: string
           id: string
+          keywords: string[] | null
           paper_slug: string
           question_number: number | null
           question_text: string
@@ -201,6 +202,7 @@ export type Database = {
           answer_md: string
           created_at?: string
           id: string
+          keywords?: string[] | null
           paper_slug: string
           question_number?: number | null
           question_text: string
@@ -213,6 +215,7 @@ export type Database = {
           answer_md?: string
           created_at?: string
           id?: string
+          keywords?: string[] | null
           paper_slug?: string
           question_number?: number | null
           question_text?: string
@@ -450,6 +453,135 @@ export type Database = {
             columns: ["upsc_question_id"]
             isOneToOne: false
             referencedRelation: "upsc_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sociology_questions: {
+        Row: {
+          chapter: string
+          chapter_order: number
+          chapter_slug: string
+          created_at: string
+          id: string
+          marks: number | null
+          paper: number
+          question_number: string | null
+          question_text: string
+          topic: string
+          topic_order: number
+          topic_slug: string
+          updated_at: string
+          year: number | null
+        }
+        Insert: {
+          chapter: string
+          chapter_order?: number
+          chapter_slug: string
+          created_at?: string
+          id: string
+          marks?: number | null
+          paper: number
+          question_number?: string | null
+          question_text: string
+          topic: string
+          topic_order?: number
+          topic_slug: string
+          updated_at?: string
+          year?: number | null
+        }
+        Update: {
+          chapter?: string
+          chapter_order?: number
+          chapter_slug?: string
+          created_at?: string
+          id?: string
+          marks?: number | null
+          paper?: number
+          question_number?: string | null
+          question_text?: string
+          topic?: string
+          topic_order?: number
+          topic_slug?: string
+          updated_at?: string
+          year?: number | null
+        }
+        Relationships: []
+      }
+      sociology_topper_copies: {
+        Row: {
+          created_at: string
+          id: string
+          paper: string | null
+          pdf_url: string
+          rank: number | null
+          source_site: string
+          source_url: string | null
+          topper_name: string
+          upsc_year: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          paper?: string | null
+          pdf_url: string
+          rank?: number | null
+          source_site: string
+          source_url?: string | null
+          topper_name: string
+          upsc_year?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          paper?: string | null
+          pdf_url?: string
+          rank?: number | null
+          source_site?: string
+          source_url?: string | null
+          topper_name?: string
+          upsc_year?: number | null
+        }
+        Relationships: []
+      }
+      sociology_topper_matches: {
+        Row: {
+          created_at: string
+          id: string
+          page_number: number | null
+          similarity: number
+          sociology_question_id: string
+          topper_copy_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          page_number?: number | null
+          similarity?: number
+          sociology_question_id: string
+          topper_copy_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          page_number?: number | null
+          similarity?: number
+          sociology_question_id?: string
+          topper_copy_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sociology_topper_matches_sociology_question_id_fkey"
+            columns: ["sociology_question_id"]
+            isOneToOne: false
+            referencedRelation: "sociology_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sociology_topper_matches_topper_copy_id_fkey"
+            columns: ["topper_copy_id"]
+            isOneToOne: false
+            referencedRelation: "sociology_topper_copies"
             referencedColumns: ["id"]
           },
         ]
