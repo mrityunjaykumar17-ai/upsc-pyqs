@@ -3,6 +3,8 @@ import { useCallback, useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { SiteHeader } from "@/components/SiteHeader";
 import { MainsAnswersAdmin } from "@/components/admin/MainsAnswersAdmin";
+import { SociologyAnswersAdmin } from "@/components/admin/SociologyAnswersAdmin";
+
 import {
   adminCreateQuestion,
   adminDeleteQuestion,
