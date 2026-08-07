@@ -55,6 +55,10 @@ export function SiteHeader() {
           <Link to="/prelims" className="hover:text-foreground transition-colors">
             Prelims PYQs
           </Link>
+          <Link to="/sociology" className="hover:text-foreground transition-colors">
+            Sociology
+          </Link>
+
           <Link to="/evaluate" className="hover:text-foreground transition-colors">
             AI Evaluation
           </Link>
