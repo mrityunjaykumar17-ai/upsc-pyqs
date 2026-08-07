@@ -159,7 +159,9 @@ export const adminGetModelAnswer = createServerFn({ method: "POST" })
     const client = await readClient();
     const { data: row, error } = await client
       .from("model_answers")
-      .select("id, paper_slug, subject_slug, year, question_number, question_text, answer_md, source, updated_at")
+      .select(
+        "id, paper_slug, subject_slug, year, question_number, question_text, answer_md, keywords, source, updated_at",
+      )
       .eq("id", data.id)
       .maybeSingle();
     if (error) throw new Error(error.message);
@@ -174,6 +176,7 @@ const ModelAnswerInput = z.object({
   question_number: z.number().int().min(0).max(1000).nullable(),
   question_text: z.string().min(1).max(8000),
   answer_md: z.string().min(1).max(120000),
+  keywords: z.array(z.string().min(1).max(80)).max(30).nullable().optional(),
   source: z.string().max(20).optional(),
 });
 
@@ -182,12 +185,15 @@ export const adminSaveModelAnswer = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     assertAdmin(data);
     const supabaseAdmin = await writeClient();
-    const { error } = await supabaseAdmin
-      .from("model_answers")
-      .upsert({ ...data.item, source: data.item.source ?? "manual" });
+    const { error } = await supabaseAdmin.from("model_answers").upsert({
+      ...data.item,
+      keywords: data.item.keywords?.length ? data.item.keywords : null,
+      source: data.item.source ?? "manual",
+    });
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
 
 export const adminDeleteModelAnswer = createServerFn({ method: "POST" })
   .inputValidator((i: unknown) => Credentials.extend({ id: z.string().min(1).max(200) }).parse(i))
