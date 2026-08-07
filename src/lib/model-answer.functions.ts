@@ -84,5 +84,5 @@ export const getModelAnswer = createServerFn({ method: "POST" })
     });
 
 
-    return { answer, source: "ai" as const, cached: false };
+    return { answer, source: "ai" as const, keywords: null, cached: false };
   });
