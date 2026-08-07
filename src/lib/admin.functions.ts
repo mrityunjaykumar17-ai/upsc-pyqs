@@ -251,3 +251,48 @@ export const adminGenerateModelAnswer = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true, answer_md: answer };
   });
+
+/* ------------------------------------------------------------------ *
+ * Sociology optional PYQs (answers reuse the model_answers table)     *
+ * ------------------------------------------------------------------ */
+
+export const adminListSociologyQuestions = createServerFn({ method: "POST" })
+  .inputValidator((i: unknown) =>
+    Credentials.extend({
+      paper: z.number().int().min(1).max(2).nullable().optional(),
+      chapter: z.string().max(80).nullable().optional(),
+      search: z.string().max(200).optional(),
+      limit: z.number().int().min(1).max(1000).optional(),
+    }).parse(i),
+  )
+  .handler(async ({ data }) => {
+    assertAdmin(data);
+    const client = await readClient();
+    let q = client
+      .from("sociology_questions")
+      .select(
+        "id, paper, chapter, chapter_slug, topic, topic_slug, question_text, year, question_number, marks",
+      );
+    if (data.paper) q = q.eq("paper", data.paper);
+    if (data.chapter) q = q.eq("chapter_slug", data.chapter);
+    if (data.search) q = q.ilike("question_text", `%${data.search}%`);
+    const { data: rows, error } = await q
+      .order("paper", { ascending: true })
+      .order("chapter_order", { ascending: true })
+      .order("topic_order", { ascending: true })
+      .order("year", { ascending: false })
+      .limit(data.limit ?? 800);
+    if (error) throw new Error(error.message);
+    return (rows ?? []) as {
+      id: string;
+      paper: number;
+      chapter: string;
+      chapter_slug: string;
+      topic: string;
+      topic_slug: string;
+      question_text: string;
+      year: number | null;
+      question_number: string | null;
+      marks: number | null;
+    }[];
+  });
