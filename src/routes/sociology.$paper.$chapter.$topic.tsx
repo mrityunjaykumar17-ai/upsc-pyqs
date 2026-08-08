@@ -3,6 +3,7 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { Breadcrumbs, SiteHeader } from "@/components/SiteHeader";
 import { AskAI } from "@/components/AskAI";
 import { SociologyTopperCopies } from "@/components/SociologyTopperCopies";
+import { SociologyMatches } from "@/components/SociologyMatches";
 import {
   getSociologyQuestions,
   getSociologyToppers,
@@ -10,8 +11,16 @@ import {
   type SociologyQuestion,
   type SociologyTopperCopy,
 } from "@/lib/sociology.functions";
+import {
+  getSociologyMatches,
+  type SociologyMatchMap,
+} from "@/lib/sociology-matches.functions";
 
-type LoaderData = { questions: SociologyQuestion[]; toppers: SociologyTopperCopy[] };
+type LoaderData = {
+  questions: SociologyQuestion[];
+  toppers: SociologyTopperCopy[];
+  matches: SociologyMatchMap;
+};
 
 export const Route = createFileRoute("/sociology/$paper/$chapter/$topic")({
   loader: async ({ params }): Promise<LoaderData> => {
@@ -22,8 +31,12 @@ export const Route = createFileRoute("/sociology/$paper/$chapter/$topic")({
       getSociologyToppers(),
     ]);
     if (!questions.length) throw notFound();
-    return { questions, toppers };
+    const matches = await getSociologyMatches({
+      data: { pyqIds: questions.map((q) => q.id) },
+    }).catch(() => ({}) as SociologyMatchMap);
+    return { questions, toppers, matches };
   },
+
   head: ({ loaderData }) => {
     if (!loaderData) return { meta: [{ title: "Not found" }, { name: "robots", content: "noindex" }] };
     const q = loaderData.questions[0];
@@ -67,7 +80,7 @@ function Fallback({ title }: { title: string }) {
 }
 
 function TopicPage() {
-  const { questions, toppers } = Route.useLoaderData() as LoaderData;
+  const { questions, toppers, matches } = Route.useLoaderData() as LoaderData;
   const [showCopies, setShowCopies] = useState(false);
   const first = questions[0];
   const paperLabel = `Paper ${first.paper === 1 ? "I" : "II"}`;
@@ -157,6 +170,8 @@ function TopicPage() {
                     paper={`Sociology Optional ${paperLabel}`}
                     subject={`${q.chapter} — ${q.topic}`}
                   />
+                  <SociologyMatches matches={matches[q.id] ?? []} />
+
                 </div>
               </div>
             </li>

@@ -111,6 +111,47 @@ STRUCTURE (use only the parts the case actually demands; do not force every head
 Target length: ~${opts.wordTarget} words (±15%). Keep the tone measured, professional, and civil-servant-like.`;
 }
 
+export function isSociology(paper?: string, subject?: string): boolean {
+  const s = `${paper ?? ""} ${subject ?? ""}`.toLowerCase();
+  return s.includes("sociolog");
+}
+
+function sociologySystem(opts: {
+  paperLabel: string;
+  wordTarget: number;
+  directive: string | null;
+  isPaperTwo: boolean;
+}): string {
+  return `You are a UPSC Sociology **optional** topper (300+ marks in Sociology)${opts.paperLabel}. Write a sociology answer, NOT a General Studies answer.
+
+${BASE_RULES}
+
+SOCIOLOGY-SPECIFIC RULES (these override any generic GS habits):
+- This is a **theory-driven discipline paper**. Every substantive point must be anchored in a named thinker, concept or study — not in schemes and policy bullet points.
+- Open by locating the question in a **sociological perspective**: functionalism, conflict/Marxian, symbolic interactionism, Weberian interpretive sociology, structuralism, feminism, postmodernism, subaltern studies, world-systems.
+- Use the classical canon precisely: **Durkheim** (social fact, anomie, solidarity, collective conscience), **Marx** (mode of production, alienation, class-in-itself/for-itself), **Weber** (ideal type, verstehen, rationalisation, class–status–party, bureaucracy), **Parsons** (AGIL, pattern variables), **Merton** (manifest/latent functions, reference group, anomie typology), **Mead & Goffman** (I/me, dramaturgy, stigma), **Bourdieu** (habitus, cultural capital, symbolic violence), **Giddens** (structuration), **Foucault** (power/knowledge, governmentality), **Habermas** (public sphere), **Beck** (risk society), **Castells** (network society).
+- Use **Indian sociologists** wherever the question touches Indian society: **M.N. Srinivas** (sanskritisation, dominant caste, westernisation), **G.S. Ghurye** (caste, tribe as "backward Hindus"), **Louis Dumont** (Homo Hierarchicus, purity–pollution), **A.R. Desai** (Marxist reading of Indian nationalism), **D.P. Mukerji** (tradition and change), **Yogendra Singh** (modernisation of Indian tradition), **Andre Beteille** (caste–class–power, Sripuram), **S.C. Dube**, **Irawati Karve**, **Veena Das**, **Rajni Kothari** (politics of caste), **Gail Omvedt**, **Leela Dube** (feminist kinship), **Ambedkar** (annihilation of caste, graded inequality), **Partha Chatterjee** / **Ranajit Guha** (subaltern), **T.K. Oommen**, **Dipankar Gupta**.
+- Cite **empirical/field studies** by name where relevant (Srinivas's Rampura, Beteille's Sripuram, Dube's Shamirpet, Epstein's Wangala/Dalena, Oscar Lewis's Rani Khera, Gough's Kumbapettai).
+- **Debate, don't list.** Set up contending positions (e.g. functionalist vs conflict view of caste; Dumont's ideology-first vs Beteille's material reading) and then take a reasoned stand.
+- Add a short **critique / limitations** of the perspectives used — examiners reward theoretical self-awareness.
+- ${opts.isPaperTwo ? "Paper II: ground theory in Indian empirical reality — caste, agrarian structure, kinship, tribe, religion, secularisation, urbanisation, migration, informal sector, social movements. Use Census/NSSO/NFHS/PLFS-type evidence in general terms only if you are sure of it." : "Paper I: stay conceptual and comparative — this paper rewards command over concepts, thinkers and methodology, not Indian policy detail."}
+- You may use diagrams described in text (e.g. "AGIL 2x2", "caste–class–power triangle") where they genuinely aid the argument.
+- Do NOT use GS-style **Way Forward** with government schemes unless the question explicitly asks for policy implications. Replace it with **Contemporary relevance** or **Emerging trends**.
+
+STRUCTURE (markdown):
+1. **Introduction** (2-3 lines): define the core concept with attribution ("Durkheim defined the social fact as…"), and state the perspective you will use.
+2. **Body**: 3-5 bold sub-headings that are *conceptual*, e.g. **Functionalist reading**, **Conflict critique**, **Indian empirical evidence**, **Feminist standpoint**. Bullets ≤ 25 words, each carrying a thinker, concept or study.
+3. **Critical evaluation**: 3-4 bullets weighing the perspectives against each other.
+4. **Contemporary relevance / Emerging trends**: 2-4 bullets on how the concept plays out today (digital society, neo-middle class, new social movements, changing family forms).
+5. **Conclusion** (2 lines): a synthetic sociological judgement — not a policy exhortation.
+
+DIRECTIVE${opts.directive ? ` — "${opts.directive}"` : ""}: respect it precisely as per HARD RULES.
+
+Target length: ~${opts.wordTarget} words (±15%).
+
+End with a "**Thinkers & Further Reading**" block listing 3-6 real names/works actually used above (e.g. Durkheim — *Division of Labour in Society* · M.N. Srinivas — *Social Change in Modern India* · Andre Beteille — *Caste, Class and Power*). No URLs, no invented titles.`;
+}
+
 export function buildAnswerPrompt(input: {
   question: string;
   marks?: number;
@@ -125,11 +166,20 @@ export function buildAnswerPrompt(input: {
     ? ` (${input.paper}${input.subject ? ` · ${input.subject}` : ""})`
     : "";
   const kind = classifyEthics(input.paper, input.subject, input.question);
+  const sociology = isSociology(input.paper, input.subject);
 
   const system =
-    kind === "theory" ? ethicsTheorySystem({ wordTarget })
+    sociology
+      ? sociologySystem({
+          paperLabel,
+          wordTarget,
+          directive,
+          isPaperTwo: /paper\s*(ii|2)\b/i.test(input.paper ?? ""),
+        })
+    : kind === "theory" ? ethicsTheorySystem({ wordTarget })
     : kind === "case_study" ? ethicsCaseStudySystem({ wordTarget })
     : generalAnswerSystem({ paperLabel, wordTarget, directive });
+
 
   const parts: string[] = [];
   parts.push(

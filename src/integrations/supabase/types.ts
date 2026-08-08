@@ -457,12 +457,61 @@ export type Database = {
           },
         ]
       }
+      sociology_pyq_topper_matches: {
+        Row: {
+          created_at: string
+          id: string
+          is_verified: boolean
+          match_type: string
+          matching_reason: string | null
+          pyq_id: string
+          similarity_score: number
+          topper_question_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_verified?: boolean
+          match_type?: string
+          matching_reason?: string | null
+          pyq_id: string
+          similarity_score?: number
+          topper_question_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_verified?: boolean
+          match_type?: string
+          matching_reason?: string | null
+          pyq_id?: string
+          similarity_score?: number
+          topper_question_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sociology_pyq_topper_matches_pyq_id_fkey"
+            columns: ["pyq_id"]
+            isOneToOne: false
+            referencedRelation: "sociology_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sociology_pyq_topper_matches_topper_question_id_fkey"
+            columns: ["topper_question_id"]
+            isOneToOne: false
+            referencedRelation: "sociology_topper_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sociology_questions: {
         Row: {
           chapter: string
           chapter_order: number
           chapter_slug: string
           created_at: string
+          embedding: string | null
           id: string
           marks: number | null
           paper: number
@@ -479,6 +528,7 @@ export type Database = {
           chapter_order?: number
           chapter_slug: string
           created_at?: string
+          embedding?: string | null
           id: string
           marks?: number | null
           paper: number
@@ -495,6 +545,7 @@ export type Database = {
           chapter_order?: number
           chapter_slug?: string
           created_at?: string
+          embedding?: string | null
           id?: string
           marks?: number | null
           paper?: number
@@ -510,36 +561,57 @@ export type Database = {
       }
       sociology_topper_copies: {
         Row: {
+          copy_name: string | null
+          copy_type: string | null
           created_at: string
+          file_url: string | null
           id: string
+          is_approved: boolean
+          page_count: number | null
           paper: string | null
           pdf_url: string
           rank: number | null
           source_site: string
           source_url: string | null
+          subject: string
           topper_name: string
+          updated_at: string
           upsc_year: number | null
         }
         Insert: {
+          copy_name?: string | null
+          copy_type?: string | null
           created_at?: string
+          file_url?: string | null
           id?: string
+          is_approved?: boolean
+          page_count?: number | null
           paper?: string | null
           pdf_url: string
           rank?: number | null
           source_site: string
           source_url?: string | null
+          subject?: string
           topper_name: string
+          updated_at?: string
           upsc_year?: number | null
         }
         Update: {
+          copy_name?: string | null
+          copy_type?: string | null
           created_at?: string
+          file_url?: string | null
           id?: string
+          is_approved?: boolean
+          page_count?: number | null
           paper?: string | null
           pdf_url?: string
           rank?: number | null
           source_site?: string
           source_url?: string | null
+          subject?: string
           topper_name?: string
+          updated_at?: string
           upsc_year?: number | null
         }
         Relationships: []
@@ -579,6 +651,68 @@ export type Database = {
           },
           {
             foreignKeyName: "sociology_topper_matches_topper_copy_id_fkey"
+            columns: ["topper_copy_id"]
+            isOneToOne: false
+            referencedRelation: "sociology_topper_copies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sociology_topper_questions: {
+        Row: {
+          created_at: string
+          embedding: string | null
+          id: string
+          is_approved: boolean
+          ocr_text: string | null
+          page_end: number | null
+          page_start: number | null
+          paper: string | null
+          question_number: string | null
+          question_text: string
+          section: string | null
+          source: string | null
+          topper_copy_id: string
+          updated_at: string
+          year: number | null
+        }
+        Insert: {
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          is_approved?: boolean
+          ocr_text?: string | null
+          page_end?: number | null
+          page_start?: number | null
+          paper?: string | null
+          question_number?: string | null
+          question_text: string
+          section?: string | null
+          source?: string | null
+          topper_copy_id: string
+          updated_at?: string
+          year?: number | null
+        }
+        Update: {
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          is_approved?: boolean
+          ocr_text?: string | null
+          page_end?: number | null
+          page_start?: number | null
+          paper?: string | null
+          question_number?: string | null
+          question_text?: string
+          section?: string | null
+          source?: string | null
+          topper_copy_id?: string
+          updated_at?: string
+          year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sociology_topper_questions_topper_copy_id_fkey"
             columns: ["topper_copy_id"]
             isOneToOne: false
             referencedRelation: "sociology_topper_copies"
