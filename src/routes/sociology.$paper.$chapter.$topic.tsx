@@ -170,6 +170,8 @@ function TopicPage() {
                     paper={`Sociology Optional ${paperLabel}`}
                     subject={`${q.chapter} — ${q.topic}`}
                   />
+                  <SociologyMatches matches={matches[q.id] ?? []} />
+
                 </div>
               </div>
             </li>
