@@ -80,7 +80,7 @@ function Fallback({ title }: { title: string }) {
 }
 
 function TopicPage() {
-  const { questions, toppers } = Route.useLoaderData() as LoaderData;
+  const { questions, toppers, matches } = Route.useLoaderData() as LoaderData;
   const [showCopies, setShowCopies] = useState(false);
   const first = questions[0];
   const paperLabel = `Paper ${first.paper === 1 ? "I" : "II"}`;
