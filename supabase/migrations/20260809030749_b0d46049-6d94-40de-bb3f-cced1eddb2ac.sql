@@ -1,0 +1,1 @@
+DELETE FROM public.sociology_pyq_topper_matches WHERE matching_reason = 'perm test';
