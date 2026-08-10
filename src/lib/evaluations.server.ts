@@ -1,25 +1,55 @@
-// Server-only pipeline: OCR handwritten answers, match to PYQ, run senior-mentor evaluation.
+// Server-only pipeline: OCR handwritten answer sheets, split into individual
+// questions, evaluate each one against its paper's framework, then summarise.
+
+import {
+  buildQuestionSystemPrompt,
+  inferMarks,
+  SUBJECT_LABELS,
+  type Subject,
+} from "./eval-frameworks";
 
 const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
-const EMBED = "https://ai.gateway.lovable.dev/v1/embeddings";
 
-type EvalReport = {
-  marks_awarded: number;
+export type QuestionEval = {
+  index: number;
+  question: string;
   marks_out_of: number;
-  expected_range: string;
-  overall: string;
-  demand_analysis: { directives: string[]; addressed: boolean; comment: string };
-  structure: { introduction: string; body: string; conclusion: string; suggested_intro?: string; suggested_conclusion?: string };
-  content_quality: { strengths: string[]; weaknesses: string[]; dimensions_covered: string[]; missing_dimensions: string[] };
-  keywords: { present: string[]; missing: string[] };
-  value_addition: { present: string[]; suggested: { type: string; item: string; why: string }[] };
-  diagrams: { present: boolean; suggestions: string[] };
-  underlines: { good: boolean; suggested_to_underline: string[] };
-  handwriting: { comment: string };
-  language: { comment: string };
-  time_management: { word_count_estimate: number; comment: string };
+  marks_source: "stated" | "inferred";
+  page_count: number;
+  answer_text: string;
+  marks_low: number;
+  marks_high: number;
+  band: string;
+  justification: string;
+  demand: { directives: string[]; addressed: boolean; comment: string };
+  criteria: { name: string; weight: string; rating: string; comment: string }[];
+  strengths: string[];
+  weaknesses: string[];
+  missing_dimensions: string[];
   missing_points: string[];
-  improved_answer: string;
+  suggestions: string[];
+  keywords: { present: string[]; missing: string[] };
+  value_addition: { type: string; item: string; why: string }[];
+  presentation: string;
+  language: string;
+  ideal_structure: { section: string; what_to_write: string }[];
+  detailed_evaluation: string;
+};
+
+export type MultiEvalReport = {
+  version: 2;
+  subject: Subject;
+  subject_label: string;
+  questions: QuestionEval[];
+  total_low: number;
+  total_high: number;
+  total_out_of: number;
+  percentage_low: number;
+  percentage_high: number;
+  overall_summary: string;
+  recurring_weaknesses: string[];
+  subject_recommendations: string[];
+  priority_areas: string[];
 };
 
 async function callChat(body: unknown, apiKey: string): Promise<string> {
@@ -29,29 +59,40 @@ async function callChat(body: unknown, apiKey: string): Promise<string> {
     body: JSON.stringify(body),
   });
   if (!res.ok) throw new Error(`AI gateway ${res.status}: ${await res.text()}`);
-  const j = await res.json() as { choices?: { message?: { content?: string } }[] };
+  const j = (await res.json()) as { choices?: { message?: { content?: string } }[] };
   return j.choices?.[0]?.message?.content ?? "";
-}
-
-async function embed(text: string, apiKey: string): Promise<number[]> {
-  const res = await fetch(EMBED, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "Lovable-API-Key": apiKey },
-    body: JSON.stringify({ model: "google/gemini-embedding-2", input: text }),
-  });
-  if (!res.ok) throw new Error(`Embed ${res.status}: ${await res.text()}`);
-  const j = await res.json() as { data?: { embedding: number[] }[] };
-  return j.data?.[0]?.embedding ?? [];
 }
 
 function extractJson(text: string): unknown {
   const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/);
   const raw = fenced ? fenced[1] : text;
-  const start = raw.indexOf("{");
-  const end = raw.lastIndexOf("}");
-  if (start < 0 || end < 0) throw new Error("No JSON in model output");
-  return JSON.parse(raw.slice(start, end + 1));
+  const s = Math.min(...[raw.indexOf("{"), raw.indexOf("[")].filter((i) => i >= 0));
+  const isArr = raw[s] === "[";
+  const end = isArr ? raw.lastIndexOf("]") : raw.lastIndexOf("}");
+  if (!Number.isFinite(s) || end < 0) throw new Error("No JSON in model output");
+  return JSON.parse(raw.slice(s, end + 1));
 }
+
+type OcrItem = {
+  question: string | null;
+  marks_stated: number | null;
+  answer: string;
+  page_count: number;
+  has_diagrams: boolean;
+  underlined: string[];
+};
+
+const OCR_PROMPT = `You are transcribing a handwritten UPSC Mains answer booklet. The upload may contain MULTIPLE questions with their answers.
+
+Split the content into separate question-answer units. For each unit extract:
+- "question": the printed/handwritten question text (null if absent)
+- "marks_stated": the marks printed against the question (e.g. 10, 15, 20) or null
+- "answer": the full answer text, preserving paragraphs, bullets, numbering, headings; wrap underlined words in <u>...</u>; write [DIAGRAM: description] where a diagram/table/flowchart appears
+- "page_count": how many answer-booklet pages THIS answer occupies (count actual written pages for this answer only, minimum 1)
+- "has_diagrams": boolean
+- "underlined": array of underlined phrases
+
+Return STRICT JSON only: {"items": [ ... ]}. No prose outside JSON.`;
 
 export async function runEvaluationPipeline(evaluationId: string, userId: string) {
   const apiKey = process.env.LOVABLE_API_KEY;
@@ -59,139 +100,194 @@ export async function runEvaluationPipeline(evaluationId: string, userId: string
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
   const { data: row, error } = await supabaseAdmin
-    .from("evaluations").select("*").eq("id", evaluationId).eq("user_id", userId).maybeSingle();
+    .from("evaluations")
+    .select("*")
+    .eq("id", evaluationId)
+    .eq("user_id", userId)
+    .maybeSingle();
   if (error || !row) throw new Error("Evaluation not found");
 
-  await supabaseAdmin.from("evaluations").update({ status: "ocr" }).eq("id", evaluationId);
+  const subject = ((row as { subject?: string }).subject ?? "gs1") as Subject;
 
-  const paths = (row.file_paths as string[]) || [];
-  // Build multimodal content: signed URLs for each page
-  const parts: unknown[] = [
-    { type: "text", text: "You are transcribing handwritten UPSC Mains answer sheet pages. Extract EVERYTHING: any question written at the top, the full answer text preserving paragraphs, bullet points, numbering, headings, underlined words (wrap in <u>...</u>), and note presence of diagrams/tables/flowcharts (write [DIAGRAM: description] where they appear). Return STRICT JSON: {\"question\": string|null, \"answer\": string, \"underlined\": string[], \"has_diagrams\": boolean, \"page_count\": number}. No prose outside JSON." },
-  ];
-  for (const p of paths) {
-    const { data: signed } = await supabaseAdmin.storage.from("answer-uploads").createSignedUrl(p, 600);
-    if (signed?.signedUrl) {
-      parts.push({ type: "image_url", image_url: { url: signed.signedUrl } });
-    }
-  }
-
-  const ocrRaw = await callChat({
-    model: "google/gemini-2.5-pro",
-    messages: [{ role: "user", content: parts }],
-  }, apiKey);
-
-  let ocr: { question: string | null; answer: string; underlined: string[]; has_diagrams: boolean; page_count: number };
   try {
-    ocr = extractJson(ocrRaw) as typeof ocr;
-  } catch {
-    ocr = { question: null, answer: ocrRaw, underlined: [], has_diagrams: false, page_count: paths.length };
-  }
+    await supabaseAdmin.from("evaluations").update({ status: "ocr" }).eq("id", evaluationId);
 
-  await supabaseAdmin.from("evaluations").update({
-    status: "evaluating",
-    ocr_text: ocr.answer,
-    detected_question: ocr.question ?? null,
-  }).eq("id", evaluationId);
-
-  // Match question to PYQ via embeddings if a question was detected
-  let matchedQ: { id: string; question_text: string; paper_slug: string; year: number; marks: number | null } | null = null;
-  if (ocr.question && ocr.question.trim().length > 15) {
-    try {
-      const qVec = await embed(ocr.question, apiKey);
-      // pgvector cosine similarity search
-      const { data: matches } = await supabaseAdmin.rpc("match_upsc_questions" as never, {
-        query_embedding: qVec as unknown as string,
-        match_count: 1,
-      } as never) as { data: unknown };
-      const hit = Array.isArray(matches) && matches.length > 0 ? matches[0] as { similarity: number; id: string; question_text: string; paper_slug: string; year: number; marks: number | null } : null;
-      if (hit && hit.similarity >= 0.72) {
-        matchedQ = { id: hit.id, question_text: hit.question_text, paper_slug: hit.paper_slug, year: hit.year, marks: hit.marks };
+    const paths = (row.file_paths as string[]) || [];
+    const parts: unknown[] = [{ type: "text", text: OCR_PROMPT }];
+    for (const p of paths) {
+      const { data: signed } = await supabaseAdmin.storage
+        .from("answer-uploads")
+        .createSignedUrl(p, 900);
+      if (!signed?.signedUrl) continue;
+      if (p.toLowerCase().endsWith(".pdf")) {
+        parts.push({ type: "file", file: { filename: p.split("/").pop(), file_data: signed.signedUrl } });
+        parts.push({ type: "image_url", image_url: { url: signed.signedUrl } });
+      } else {
+        parts.push({ type: "image_url", image_url: { url: signed.signedUrl } });
       }
-    } catch (e) {
-      console.warn("PYQ match failed", e);
     }
-  }
 
-  // Fallback: brute-force ILIKE match against upsc_questions for a rough question find
-  if (!matchedQ && ocr.question) {
-    const words = ocr.question.split(/\s+/).filter((w) => w.length > 5).slice(0, 3);
-    if (words.length) {
-      const { data: hits } = await supabaseAdmin
-        .from("upsc_questions")
-        .select("id, question_text, paper_slug, year, marks")
-        .ilike("question_text", `%${words[0]}%`)
-        .limit(5);
-      if (hits && hits.length) matchedQ = hits[0] as never;
+    const ocrRaw = await callChat(
+      { model: "google/gemini-2.5-pro", messages: [{ role: "user", content: parts }] },
+      apiKey,
+    );
+
+    let items: OcrItem[] = [];
+    try {
+      const parsed = extractJson(ocrRaw) as { items?: OcrItem[] } | OcrItem[];
+      items = Array.isArray(parsed) ? parsed : (parsed.items ?? []);
+    } catch {
+      items = [];
     }
-  }
+    items = items
+      .filter((i) => (i?.answer ?? "").trim().length > 40)
+      .slice(0, 10);
+    if (!items.length) {
+      items = [
+        {
+          question: null,
+          marks_stated: null,
+          answer: ocrRaw,
+          page_count: paths.length || 1,
+          has_diagrams: false,
+          underlined: [],
+        },
+      ];
+    }
 
-  const questionForEval = matchedQ?.question_text ?? ocr.question ?? "(question could not be detected — evaluate the answer as a general UPSC Mains response)";
-  const marksTotal = matchedQ?.marks ?? 15;
+    await supabaseAdmin
+      .from("evaluations")
+      .update({
+        status: "evaluating",
+        ocr_text: items.map((i) => `Q: ${i.question ?? "(not detected)"}\n${i.answer}`).join("\n\n---\n\n"),
+        detected_question: items[0]?.question ?? null,
+        question_count: items.length,
+      })
+      .eq("id", evaluationId);
 
-  const systemPrompt = `You are a senior UPSC Mains evaluator with 15+ years of experience checking answer copies at coaching institutes like Vision IAS and ForumIAS. You give sharp, specific, mentor-style feedback — never generic AI platitudes.
+    const questions: QuestionEval[] = [];
+    for (let idx = 0; idx < items.length; idx++) {
+      const it = items[idx];
+      const stated = typeof it.marks_stated === "number" && it.marks_stated > 0;
+      const pages = Math.max(1, Math.round(it.page_count || 1));
+      const marks = stated ? it.marks_stated! : inferMarks(subject, pages);
+      const system = buildQuestionSystemPrompt(subject, marks);
+      const user = `QUESTION ${idx + 1}: ${it.question ?? "(question not printed — infer the demand from the answer and evaluate accordingly)"}
+Marks: ${marks} (${stated ? "printed on the sheet" : `inferred from ${pages} written page(s)`})
 
-For every criticism, cite the exact missing element (e.g. "You discussed causes well but ignored constitutional mechanisms such as Article 243 and State Finance Commissions"). Never say "needs improvement" without saying WHAT to improve and HOW.
+STUDENT'S ANSWER (handwritten OCR):
+${it.answer}
 
-Evaluate the student's answer against the question. The question is worth ${marksTotal} marks.
-
-Return STRICT JSON matching this exact schema (no prose outside JSON, no markdown fences):
-{
-  "marks_awarded": number (out of ${marksTotal}, one decimal ok),
-  "marks_out_of": ${marksTotal},
-  "expected_range": string (e.g. "9-11 / 15"),
-  "overall": string (2-3 sentences summary),
-  "demand_analysis": {"directives": string[], "addressed": boolean, "comment": string},
-  "structure": {"introduction": string, "body": string, "conclusion": string, "suggested_intro": string, "suggested_conclusion": string},
-  "content_quality": {"strengths": string[], "weaknesses": string[], "dimensions_covered": string[], "missing_dimensions": string[]},
-  "keywords": {"present": string[], "missing": string[]},
-  "value_addition": {"present": string[], "suggested": [{"type": string, "item": string, "why": string}]},
-  "diagrams": {"present": boolean, "suggestions": string[]},
-  "underlines": {"good": boolean, "suggested_to_underline": string[]},
-  "handwriting": {"comment": string},
-  "language": {"comment": string},
-  "time_management": {"word_count_estimate": number, "comment": string},
-  "missing_points": string[],
-  "improved_answer": string (a topper-level rewritten answer in UPSC format with Introduction, Body with subheadings, Conclusion)
-}
-
-Never fabricate committee names, article numbers, court judgments, data, or reports. If unsure, omit rather than invent. Ethics (GS4) answers should be evaluated against Point-Explanation-Example structure for theory, and Facts/Stakeholders/Options/Recommendation for case studies.`;
-
-  const userPrompt = `QUESTION: ${questionForEval}
-${matchedQ ? `Paper: ${matchedQ.paper_slug}, Year: ${matchedQ.year}` : ""}
-
-STUDENT'S ANSWER (from handwritten OCR):
-${ocr.answer}
-
-Diagrams detected in answer sheet: ${ocr.has_diagrams ? "yes" : "no"}
-Underlined phrases: ${ocr.underlined.slice(0, 20).join(" | ") || "none detected"}
+Diagrams present: ${it.has_diagrams ? "yes" : "no"}
+Underlined phrases: ${(it.underlined ?? []).slice(0, 20).join(" | ") || "none detected"}
 
 Evaluate now. Return only the JSON.`;
 
-  const evalRaw = await callChat({
-    model: "openai/gpt-5.5",
-    messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userPrompt }],
-  }, apiKey);
+      const raw = await callChat(
+        { model: "openai/gpt-5.5", messages: [{ role: "system", content: system }, { role: "user", content: user }] },
+        apiKey,
+      );
+      const r = extractJson(raw) as Partial<QuestionEval>;
+      questions.push({
+        index: idx + 1,
+        question: it.question ?? "(question not detected)",
+        marks_out_of: marks,
+        marks_source: stated ? "stated" : "inferred",
+        page_count: pages,
+        answer_text: it.answer,
+        marks_low: Number(r.marks_low ?? 0),
+        marks_high: Number(r.marks_high ?? 0),
+        band: r.band ?? "",
+        justification: r.justification ?? "",
+        demand: r.demand ?? { directives: [], addressed: false, comment: "" },
+        criteria: r.criteria ?? [],
+        strengths: r.strengths ?? [],
+        weaknesses: r.weaknesses ?? [],
+        missing_dimensions: r.missing_dimensions ?? [],
+        missing_points: r.missing_points ?? [],
+        suggestions: r.suggestions ?? [],
+        keywords: r.keywords ?? { present: [], missing: [] },
+        value_addition: r.value_addition ?? [],
+        presentation: r.presentation ?? "",
+        language: r.language ?? "",
+        ideal_structure: r.ideal_structure ?? [],
+        detailed_evaluation: r.detailed_evaluation ?? "",
+      });
 
-  let report: EvalReport;
-  try {
-    report = extractJson(evalRaw) as EvalReport;
+      await supabaseAdmin
+        .from("evaluations")
+        .update({ status: `evaluating ${idx + 1}/${items.length}` })
+        .eq("id", evaluationId);
+    }
+
+    const total_out_of = questions.reduce((a, q) => a + q.marks_out_of, 0);
+    const total_low = round1(questions.reduce((a, q) => a + q.marks_low, 0));
+    const total_high = round1(questions.reduce((a, q) => a + q.marks_high, 0));
+
+    const summaryRaw = await callChat(
+      {
+        model: "openai/gpt-5.5",
+        messages: [
+          {
+            role: "system",
+            content: `You are a senior UPSC ${SUBJECT_LABELS[subject]} mentor summarising a student's answer-copy review. Be specific and actionable. Return STRICT JSON only:
+{"overall_summary": string, "recurring_weaknesses": string[], "subject_recommendations": string[], "priority_areas": string[]}`,
+          },
+          {
+            role: "user",
+            content: `Per-question results:\n${questions
+              .map(
+                (q) =>
+                  `Q${q.index} (${q.marks_low}-${q.marks_high}/${q.marks_out_of}, ${q.band}): ${q.question}\nJustification: ${q.justification}\nWeaknesses: ${q.weaknesses.join("; ")}\nMissing dimensions: ${q.missing_dimensions.join("; ")}`,
+              )
+              .join("\n\n")}\n\nTotal: ${total_low}-${total_high} / ${total_out_of}. Summarise now.`,
+          },
+        ],
+      },
+      apiKey,
+    );
+    let summary = { overall_summary: "", recurring_weaknesses: [] as string[], subject_recommendations: [] as string[], priority_areas: [] as string[] };
+    try {
+      summary = { ...summary, ...(extractJson(summaryRaw) as typeof summary) };
+    } catch {
+      /* keep defaults */
+    }
+
+    const report: MultiEvalReport = {
+      version: 2,
+      subject,
+      subject_label: SUBJECT_LABELS[subject],
+      questions,
+      total_low,
+      total_high,
+      total_out_of,
+      percentage_low: total_out_of ? round1((total_low / total_out_of) * 100) : 0,
+      percentage_high: total_out_of ? round1((total_high / total_out_of) * 100) : 0,
+      ...summary,
+    };
+
+    await supabaseAdmin
+      .from("evaluations")
+      .update({
+        status: "done",
+        evaluation: JSON.parse(JSON.stringify(report)),
+        marks_awarded: round1((total_low + total_high) / 2),
+        marks_out_of: total_out_of,
+        question_count: questions.length,
+        detected_meta: { subject, questions: questions.map((q) => ({ q: q.question, marks: q.marks_out_of })) },
+      })
+      .eq("id", evaluationId);
+
+    return { ok: true, id: evaluationId };
   } catch (e) {
-    await supabaseAdmin.from("evaluations").update({
-      status: "error",
-      error_message: `Evaluation JSON parse failed: ${(e as Error).message}`,
-    }).eq("id", evaluationId);
+    await supabaseAdmin
+      .from("evaluations")
+      .update({ status: "error", error_message: (e as Error).message.slice(0, 500) })
+      .eq("id", evaluationId);
     throw e;
   }
+}
 
-  await supabaseAdmin.from("evaluations").update({
-    status: "done",
-    evaluation: JSON.parse(JSON.stringify(report)),
-    marks_awarded: report.marks_awarded,
-    marks_out_of: report.marks_out_of,
-    detected_question_id: matchedQ?.id ?? null,
-    detected_meta: matchedQ ? { paper: matchedQ.paper_slug, year: matchedQ.year, marks: matchedQ.marks } : { question: ocr.question },
-  }).eq("id", evaluationId);
-
-  return { ok: true, id: evaluationId };
+function round1(n: number) {
+  return Math.round(n * 10) / 10;
 }
