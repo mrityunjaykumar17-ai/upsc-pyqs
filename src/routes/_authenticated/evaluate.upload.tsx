@@ -62,8 +62,35 @@ function UploadPage() {
       <main className="mx-auto max-w-3xl px-6 py-10">
         <h1 className="text-3xl font-bold tracking-tight">Upload answer sheet</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          PDF, JPG, PNG or WebP. Multi-page supported. Include the question at the top of the first page for best matching.
+          PDF, JPG, PNG or WebP. A single file may contain several questions — each one is detected and evaluated separately.
         </p>
+
+        <div className="mt-8">
+          <h2 className="text-sm font-semibold">1. Select the paper</h2>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {SUBJECTS.map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setSubject(s)}
+                disabled={busy}
+                className={`rounded-xl border p-3 text-left transition ${
+                  subject === s ? "border-primary bg-primary/5" : "border-border bg-card hover:border-primary/40"
+                }`}
+              >
+                <div className="text-sm font-semibold">{SUBJECT_LABELS[s]}</div>
+                <div className="mt-1 text-xs text-muted-foreground">{SUBJECT_BLURBS[s]}</div>
+              </button>
+            ))}
+          </div>
+          <p className="mt-3 text-xs text-muted-foreground">
+            Marks printed against a question are used as-is. Otherwise they are inferred from the number of
+            written pages ({subject === "sociology" ? "2 pages → 10 marks, 3 pages → 20 marks" : "2 pages → 10 marks, 3 pages → 15 marks"}).
+          </p>
+        </div>
+
+        <h2 className="mt-8 text-sm font-semibold">2. Upload your pages</h2>
+
 
         <label
           onDrop={onDrop}
