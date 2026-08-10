@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/SiteHeader";
 import { createEvaluation, processEvaluation } from "@/lib/evaluations.functions";
 import { useServerFn } from "@tanstack/react-start";
+import { SUBJECTS, SUBJECT_LABELS, SUBJECT_BLURBS, type Subject } from "@/lib/eval-frameworks";
 
 export const Route = createFileRoute("/_authenticated/evaluate/upload")({
   component: UploadPage,
@@ -14,6 +15,7 @@ const ACCEPT = "image/jpeg,image/png,image/webp,application/pdf";
 function UploadPage() {
   const navigate = useNavigate();
   const [files, setFiles] = useState<File[]>([]);
+  const [subject, setSubject] = useState<Subject | null>(null);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState<string>("");
   const [err, setErr] = useState<string | null>(null);
@@ -27,7 +29,7 @@ function UploadPage() {
   }
 
   async function handleSubmit() {
-    if (!files.length) return;
+    if (!files.length || !subject) return;
     setBusy(true); setErr(null); setProgress("Uploading files…");
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -43,8 +45,8 @@ function UploadPage() {
         paths.push(path);
       }
       setProgress("Creating evaluation…");
-      const { id } = await createFn({ data: { filePaths: paths } });
-      setProgress("Running OCR and evaluation (this can take 30-90 seconds)…");
+      const { id } = await createFn({ data: { filePaths: paths, subject } });
+      setProgress("Reading your answers and evaluating each question (this can take 1-3 minutes)…");
       await processFn({ data: { id } });
       navigate({ to: "/evaluate/$id", params: { id } });
     } catch (e) {
@@ -53,14 +55,42 @@ function UploadPage() {
     }
   }
 
+
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
       <main className="mx-auto max-w-3xl px-6 py-10">
         <h1 className="text-3xl font-bold tracking-tight">Upload answer sheet</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          PDF, JPG, PNG or WebP. Multi-page supported. Include the question at the top of the first page for best matching.
+          PDF, JPG, PNG or WebP. A single file may contain several questions — each one is detected and evaluated separately.
         </p>
+
+        <div className="mt-8">
+          <h2 className="text-sm font-semibold">1. Select the paper</h2>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {SUBJECTS.map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setSubject(s)}
+                disabled={busy}
+                className={`rounded-xl border p-3 text-left transition ${
+                  subject === s ? "border-primary bg-primary/5" : "border-border bg-card hover:border-primary/40"
+                }`}
+              >
+                <div className="text-sm font-semibold">{SUBJECT_LABELS[s]}</div>
+                <div className="mt-1 text-xs text-muted-foreground">{SUBJECT_BLURBS[s]}</div>
+              </button>
+            ))}
+          </div>
+          <p className="mt-3 text-xs text-muted-foreground">
+            Marks printed against a question are used as-is. Otherwise they are inferred from the number of
+            written pages ({subject === "sociology" ? "2 pages → 10 marks, 3 pages → 20 marks" : "2 pages → 10 marks, 3 pages → 15 marks"}).
+          </p>
+        </div>
+
+        <h2 className="mt-8 text-sm font-semibold">2. Upload your pages</h2>
+
 
         <label
           onDrop={onDrop}
@@ -97,12 +127,13 @@ function UploadPage() {
 
         <div className="mt-8 flex items-center gap-3">
           <button
-            disabled={!files.length || busy}
+            disabled={!files.length || !subject || busy}
             onClick={handleSubmit}
             className="inline-flex items-center rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
           >
-            {busy ? "Processing…" : "Evaluate my answer"}
+            {busy ? "Processing…" : subject ? "Evaluate my answers" : "Select a paper first"}
           </button>
+
           {progress && <span className="text-sm text-muted-foreground">{progress}</span>}
         </div>
         {err && <p className="mt-4 text-sm text-destructive">{err}</p>}

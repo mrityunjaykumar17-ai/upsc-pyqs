@@ -1,245 +1,194 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { getEvaluation } from "@/lib/evaluations.functions";
 import { SiteHeader } from "@/components/SiteHeader";
-import ReactMarkdown from "react-markdown";
+import { getEvaluation } from "@/lib/evaluations.functions";
+import type { MultiEvalReport, QuestionEval } from "@/lib/evaluations.server";
 
 export const Route = createFileRoute("/_authenticated/evaluate/$id")({
-  component: EvalResult,
+  component: EvaluationReport,
 });
 
-type EvalReport = {
-  marks_awarded: number;
-  marks_out_of: number;
-  expected_range: string;
-  overall: string;
-  demand_analysis: { directives: string[]; addressed: boolean; comment: string };
-  structure: { introduction: string; body: string; conclusion: string; suggested_intro?: string; suggested_conclusion?: string };
-  content_quality: { strengths: string[]; weaknesses: string[]; dimensions_covered: string[]; missing_dimensions: string[] };
-  keywords: { present: string[]; missing: string[] };
-  value_addition: { present: string[]; suggested: { type: string; item: string; why: string }[] };
-  diagrams: { present: boolean; suggestions: string[] };
-  underlines: { good: boolean; suggested_to_underline: string[] };
-  handwriting: { comment: string };
-  language: { comment: string };
-  time_management: { word_count_estimate: number; comment: string };
-  missing_points: string[];
-  improved_answer: string;
-};
-
-function EvalResult() {
-  const { id } = Route.useParams();
-  const getFn = useServerFn(getEvaluation);
-  const { data, isLoading, refetch } = useQuery({
-    queryKey: ["evaluation", id],
-    queryFn: () => getFn({ data: { id } }),
-    refetchInterval: (q) => {
-      const s = (q.state.data as { status?: string } | undefined)?.status;
-      return s === "done" || s === "error" ? false : 3000;
-    },
-  });
-
-  if (isLoading) return <Shell><p className="text-muted-foreground">Loading…</p></Shell>;
-  if (!data) return <Shell><p className="text-muted-foreground">Evaluation not found.</p></Shell>;
-
-  if (data.status !== "done") {
-    return (
-      <Shell>
-        <div className="rounded-xl border border-border bg-card p-6">
-          <div className="flex items-center gap-3">
-            <div className="h-3 w-3 animate-pulse rounded-full bg-primary" />
-            <div>
-              <div className="font-semibold">Working on your evaluation…</div>
-              <div className="text-sm text-muted-foreground capitalize">Status: {data.status}</div>
-            </div>
-          </div>
-          {data.error_message && (
-            <p className="mt-4 text-sm text-destructive">{data.error_message}</p>
-          )}
-          <button onClick={() => refetch()} className="mt-4 text-sm text-primary underline">
-            Refresh
-          </button>
-        </div>
-      </Shell>
-    );
-  }
-
-  const report = data.evaluation as EvalReport | null;
-  if (!report) return <Shell><p>No report available.</p></Shell>;
-
-  return (
-    <Shell>
-      {/* Score hero */}
-      <div className="rounded-2xl border border-border bg-card p-6">
-        <div className="flex flex-wrap items-baseline gap-4">
-          <div className="text-5xl font-bold text-primary">
-            {report.marks_awarded} <span className="text-2xl text-muted-foreground">/ {report.marks_out_of}</span>
-          </div>
-          <div className="text-sm text-muted-foreground">Expected UPSC range: <span className="font-medium text-foreground">{report.expected_range}</span></div>
-        </div>
-        <p className="mt-4 text-sm">{report.overall}</p>
-      </div>
-
-      {data.detected_question && (
-        <Card title="Detected question">
-          <p className="text-sm">{data.detected_question}</p>
-        </Card>
-      )}
-
-      <Card title="Demand analysis">
-        <div className="flex flex-wrap gap-2">
-          {report.demand_analysis.directives.map((d) => (
-            <span key={d} className="rounded-full bg-secondary px-2 py-0.5 text-xs">{d}</span>
-          ))}
-        </div>
-        <p className={`mt-2 text-xs font-medium ${report.demand_analysis.addressed ? "text-emerald-600" : "text-amber-600"}`}>
-          {report.demand_analysis.addressed ? "✓ Directives addressed" : "⚠ Directives not fully addressed"}
-        </p>
-        <p className="mt-2 text-sm">{report.demand_analysis.comment}</p>
-      </Card>
-
-      <Card title="Structure: intro / body / conclusion">
-        <Section label="Introduction">{report.structure.introduction}</Section>
-        <Section label="Body">{report.structure.body}</Section>
-        <Section label="Conclusion">{report.structure.conclusion}</Section>
-        {report.structure.suggested_intro && <Section label="Suggested intro"><em>{report.structure.suggested_intro}</em></Section>}
-        {report.structure.suggested_conclusion && <Section label="Suggested conclusion"><em>{report.structure.suggested_conclusion}</em></Section>}
-      </Card>
-
-      <Card title="Content quality">
-        <TwoCol>
-          <List label="Strengths" items={report.content_quality.strengths} tone="good" />
-          <List label="Weaknesses" items={report.content_quality.weaknesses} tone="bad" />
-        </TwoCol>
-        <TwoCol>
-          <Chips label="Dimensions covered" items={report.content_quality.dimensions_covered} tone="good" />
-          <Chips label="Missing dimensions" items={report.content_quality.missing_dimensions} tone="bad" />
-        </TwoCol>
-      </Card>
-
-      <Card title="Keywords">
-        <TwoCol>
-          <Chips label="Present" items={report.keywords.present} tone="good" />
-          <Chips label="Missing" items={report.keywords.missing} tone="bad" />
-        </TwoCol>
-      </Card>
-
-      <Card title="Value addition">
-        <Chips label="Present" items={report.value_addition.present} tone="good" />
-        <div className="mt-3 space-y-2">
-          {report.value_addition.suggested.map((s, i) => (
-            <div key={i} className="rounded-lg border border-border bg-background p-3">
-              <div className="text-xs uppercase tracking-wider text-muted-foreground">{s.type}</div>
-              <div className="font-medium">{s.item}</div>
-              <div className="text-sm text-muted-foreground">{s.why}</div>
-            </div>
-          ))}
-        </div>
-      </Card>
-
-      <Card title="Diagrams">
-        <p className="text-sm">{report.diagrams.present ? "✓ Diagram(s) present in answer sheet." : "No diagrams detected."}</p>
-        {report.diagrams.suggestions.length > 0 && <List label="Suggestions" items={report.diagrams.suggestions} />}
-      </Card>
-
-      <Card title="Underlining">
-        <p className="text-sm">{report.underlines.good ? "✓ Key terms underlined." : "Underline more keywords for examiner attention."}</p>
-        <Chips label="Suggested underlines" items={report.underlines.suggested_to_underline} />
-      </Card>
-
-      <Card title="Presentation & language">
-        <Section label="Handwriting">{report.handwriting.comment}</Section>
-        <Section label="Language">{report.language.comment}</Section>
-        <Section label="Time / word count">
-          ~{report.time_management.word_count_estimate} words · {report.time_management.comment}
-        </Section>
-      </Card>
-
-      <Card title="What else could have been written">
-        <List items={report.missing_points} />
-      </Card>
-
-      <Card title="Topper-level improved answer">
-        <div className="prose prose-sm max-w-none dark:prose-invert">
-          <ReactMarkdown>{report.improved_answer}</ReactMarkdown>
-        </div>
-      </Card>
-
-      <div className="flex gap-3">
-        <Link to="/evaluate/upload" className="inline-flex items-center rounded-lg border border-border bg-background px-4 py-2 text-sm hover:bg-accent">
-          Evaluate another answer
-        </Link>
-        <Link to="/evaluate/history" className="inline-flex items-center rounded-lg border border-border bg-background px-4 py-2 text-sm hover:bg-accent">
-          View history
-        </Link>
-      </div>
-    </Shell>
-  );
-}
-
-function Shell({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="min-h-screen bg-background">
-      <SiteHeader />
-      <main className="mx-auto max-w-4xl space-y-4 px-6 py-8">{children}</main>
-    </div>
-  );
-}
-function Card({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="rounded-xl border border-border bg-card p-5">
-      <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{title}</h2>
-      <div className="mt-3">{children}</div>
-    </section>
-  );
-}
-function Section({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="mt-2">
-      <div className="text-xs font-semibold text-muted-foreground">{label}</div>
-      <div className="text-sm">{children}</div>
-    </div>
-  );
-}
-function TwoCol({ children }: { children: React.ReactNode }) {
-  return <div className="grid gap-4 sm:grid-cols-2 mt-2">{children}</div>;
-}
-function List({ label, items, tone }: { label?: string; items: string[]; tone?: "good" | "bad" }) {
+function List({ title, items }: { title: string; items?: string[] }) {
   if (!items?.length) return null;
   return (
     <div>
-      {label && <div className="text-xs font-semibold text-muted-foreground">{label}</div>}
-      <ul className="mt-1 space-y-1 text-sm">
-        {items.map((it, i) => (
-          <li key={i} className="flex gap-2">
-            <span className={tone === "good" ? "text-emerald-600" : tone === "bad" ? "text-amber-600" : "text-muted-foreground"}>•</span>
-            <span>{it}</span>
-          </li>
-        ))}
+      <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</h4>
+      <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">
+        {items.map((s, i) => <li key={i}>{s}</li>)}
       </ul>
     </div>
   );
 }
-function Chips({ label, items, tone }: { label: string; items: string[]; tone?: "good" | "bad" }) {
-  if (!items?.length) return null;
+
+function QuestionCard({ q }: { q: QuestionEval }) {
   return (
-    <div>
-      <div className="text-xs font-semibold text-muted-foreground">{label}</div>
-      <div className="mt-1 flex flex-wrap gap-1.5">
-        {items.map((it, i) => (
-          <span
-            key={i}
-            className={`rounded-full px-2 py-0.5 text-xs ${
-              tone === "good" ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400" :
-              tone === "bad" ? "bg-amber-500/10 text-amber-700 dark:text-amber-400" :
-              "bg-secondary"
-            }`}
-          >
-            {it}
-          </span>
-        ))}
+    <section className="rounded-2xl border border-border bg-card p-6">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="max-w-2xl">
+          <div className="text-xs font-semibold uppercase tracking-wider text-primary">Question {q.index}</div>
+          <p className="mt-1 text-sm font-medium">{q.question}</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {q.marks_out_of} marks · {q.marks_source === "stated" ? "printed on sheet" : `inferred from ${q.page_count} page(s)`}
+          </p>
+        </div>
+        <div className="rounded-xl border border-border bg-secondary/40 px-4 py-2 text-right">
+          <div className="text-lg font-bold">{q.marks_low}–{q.marks_high} / {q.marks_out_of}</div>
+          {q.band && <div className="text-xs text-muted-foreground">{q.band}</div>}
+        </div>
       </div>
+
+      {q.justification && <p className="mt-4 text-sm text-muted-foreground">{q.justification}</p>}
+
+      {q.demand?.comment && (
+        <div className="mt-4 rounded-lg border border-border bg-secondary/30 p-3 text-sm">
+          <span className="font-semibold">Demand of the question: </span>
+          {q.demand.directives?.length ? <em>{q.demand.directives.join(", ")} — </em> : null}
+          {q.demand.comment}
+        </div>
+      )}
+
+      {q.detailed_evaluation && <p className="mt-4 whitespace-pre-line text-sm leading-relaxed">{q.detailed_evaluation}</p>}
+
+      <div className="mt-5 grid gap-5 sm:grid-cols-2">
+        <List title="Strengths" items={q.strengths} />
+        <List title="Weaknesses & gaps" items={q.weaknesses} />
+        <List title="Missing dimensions" items={q.missing_dimensions} />
+        <List title="Missing points" items={q.missing_points} />
+        <List title="Suggestions for improvement" items={q.suggestions} />
+        <List title="Keywords missing" items={q.keywords?.missing} />
+      </div>
+
+      {q.criteria?.length > 0 && (
+        <div className="mt-5 overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="text-xs uppercase tracking-wider text-muted-foreground">
+              <tr><th className="py-1 pr-3">Criterion</th><th className="py-1 pr-3">Weight</th><th className="py-1 pr-3">Rating</th><th className="py-1">Comment</th></tr>
+            </thead>
+            <tbody>
+              {q.criteria.map((c, i) => (
+                <tr key={i} className="border-t border-border/60">
+                  <td className="py-1.5 pr-3 font-medium">{c.name}</td>
+                  <td className="py-1.5 pr-3 text-muted-foreground">{c.weight}</td>
+                  <td className="py-1.5 pr-3">{c.rating}</td>
+                  <td className="py-1.5 text-muted-foreground">{c.comment}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {q.value_addition?.length > 0 && (
+        <div className="mt-5">
+          <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Value addition to include</h4>
+          <ul className="mt-2 space-y-1 text-sm">
+            {q.value_addition.map((v, i) => (
+              <li key={i}><span className="font-medium">{v.type}:</span> {v.item} <span className="text-muted-foreground">— {v.why}</span></li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {q.ideal_structure?.length > 0 && (
+        <div className="mt-5 rounded-xl border border-border bg-secondary/30 p-4">
+          <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Ideal answer structure</h4>
+          <ul className="mt-2 space-y-1.5 text-sm">
+            {q.ideal_structure.map((s, i) => (
+              <li key={i}><span className="font-semibold">{s.section}:</span> {s.what_to_write}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {(q.presentation || q.language) && (
+        <div className="mt-5 grid gap-3 text-sm sm:grid-cols-2">
+          {q.presentation && <p><span className="font-semibold">Presentation: </span>{q.presentation}</p>}
+          {q.language && <p><span className="font-semibold">Language: </span>{q.language}</p>}
+        </div>
+      )}
+
+      <details className="mt-5">
+        <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wider text-muted-foreground">Your answer (as read)</summary>
+        <p className="mt-2 whitespace-pre-line text-sm text-muted-foreground">{q.answer_text}</p>
+      </details>
+    </section>
+  );
+}
+
+function EvaluationReport() {
+  const { id } = Route.useParams();
+  const fetchEval = useServerFn(getEvaluation);
+  const { data, isLoading } = useQuery({
+    queryKey: ["evaluation", id],
+    queryFn: () => fetchEval({ data: { id } }),
+    refetchInterval: (q) => {
+      const row = q.state.data as { status?: string } | undefined;
+      return row && row.status !== "done" && row.status !== "error" ? 4000 : false;
+    },
+  });
+
+  const row = data as
+    | { status: string; error_message?: string | null; evaluation?: unknown; created_at?: string }
+    | null
+    | undefined;
+  const report = row?.evaluation as MultiEvalReport | undefined;
+
+  return (
+    <div className="min-h-screen bg-background">
+      <SiteHeader />
+      <main className="mx-auto max-w-4xl px-6 py-10">
+        <Link to="/evaluate/history" className="text-sm text-muted-foreground hover:text-foreground">← All evaluations</Link>
+
+        {isLoading && <p className="mt-8 text-sm text-muted-foreground">Loading…</p>}
+        {row && row.status === "error" && (
+          <p className="mt-8 text-sm text-destructive">Evaluation failed: {row.error_message}</p>
+        )}
+        {row && row.status !== "done" && row.status !== "error" && (
+          <p className="mt-8 text-sm text-muted-foreground">Working on your copy — {row.status}…</p>
+        )}
+
+        {report && report.questions?.length > 0 && (
+          <>
+            <header className="mt-6 rounded-2xl border border-border bg-card p-6">
+              <div className="text-xs font-semibold uppercase tracking-wider text-primary">{report.subject_label}</div>
+              <h1 className="mt-1 text-3xl font-bold tracking-tight">
+                {report.total_low}–{report.total_high} / {report.total_out_of}
+              </h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {report.percentage_low}%–{report.percentage_high}% · {report.questions.length} question(s) evaluated
+              </p>
+              {report.overall_summary && <p className="mt-4 text-sm leading-relaxed">{report.overall_summary}</p>}
+              <div className="mt-5 grid gap-5 sm:grid-cols-3">
+                <List title="Recurring weaknesses" items={report.recurring_weaknesses} />
+                <List title="Recommendations" items={report.subject_recommendations} />
+                <List title="Priority areas" items={report.priority_areas} />
+              </div>
+              <div className="mt-5 overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead className="text-xs uppercase tracking-wider text-muted-foreground">
+                    <tr><th className="py-1 pr-3">#</th><th className="py-1 pr-3">Question</th><th className="py-1 pr-3">Marks</th><th className="py-1">Band</th></tr>
+                  </thead>
+                  <tbody>
+                    {report.questions.map((q) => (
+                      <tr key={q.index} className="border-t border-border/60">
+                        <td className="py-1.5 pr-3">{q.index}</td>
+                        <td className="py-1.5 pr-3">{q.question.slice(0, 90)}{q.question.length > 90 ? "…" : ""}</td>
+                        <td className="py-1.5 pr-3 whitespace-nowrap">{q.marks_low}–{q.marks_high} / {q.marks_out_of}</td>
+                        <td className="py-1.5">{q.band}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </header>
+
+            <div className="mt-6 space-y-6">
+              {report.questions.map((q) => <QuestionCard key={q.index} q={q} />)}
+            </div>
+          </>
+        )}
+      </main>
     </div>
   );
 }

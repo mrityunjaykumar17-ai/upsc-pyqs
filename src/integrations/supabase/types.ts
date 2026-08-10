@@ -146,7 +146,9 @@ export type Database = {
           marks_awarded: number | null
           marks_out_of: number | null
           ocr_text: string | null
+          question_count: number | null
           status: string
+          subject: string | null
           updated_at: string
           user_id: string
         }
@@ -162,7 +164,9 @@ export type Database = {
           marks_awarded?: number | null
           marks_out_of?: number | null
           ocr_text?: string | null
+          question_count?: number | null
           status?: string
+          subject?: string | null
           updated_at?: string
           user_id: string
         }
@@ -178,7 +182,9 @@ export type Database = {
           marks_awarded?: number | null
           marks_out_of?: number | null
           ocr_text?: string | null
+          question_count?: number | null
           status?: string
+          subject?: string | null
           updated_at?: string
           user_id?: string
         }

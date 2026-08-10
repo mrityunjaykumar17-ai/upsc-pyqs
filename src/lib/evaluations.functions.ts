@@ -10,18 +10,20 @@ export const createEvaluation = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
     z.object({
       filePaths: z.array(z.string().min(1)).min(1).max(20),
+      subject: z.enum(["gs1", "gs2", "gs3", "gs4", "sociology"]),
     }).parse(input),
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: row, error } = await supabase
       .from("evaluations")
-      .insert({ user_id: userId, status: "uploaded", file_paths: data.filePaths })
+      .insert({ user_id: userId, status: "uploaded", file_paths: data.filePaths, subject: data.subject })
       .select("id")
       .single();
     if (error) throw new Error(error.message);
     return { id: row.id as string };
   });
+
 
 export const processEvaluation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
