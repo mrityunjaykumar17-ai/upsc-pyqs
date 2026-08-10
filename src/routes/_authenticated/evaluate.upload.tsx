@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/SiteHeader";
 import { createEvaluation, processEvaluation } from "@/lib/evaluations.functions";
 import { useServerFn } from "@tanstack/react-start";
+import { SUBJECTS, SUBJECT_LABELS, SUBJECT_BLURBS, type Subject } from "@/lib/eval-frameworks";
 
 export const Route = createFileRoute("/_authenticated/evaluate/upload")({
   component: UploadPage,
@@ -14,6 +15,7 @@ const ACCEPT = "image/jpeg,image/png,image/webp,application/pdf";
 function UploadPage() {
   const navigate = useNavigate();
   const [files, setFiles] = useState<File[]>([]);
+  const [subject, setSubject] = useState<Subject | null>(null);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState<string>("");
   const [err, setErr] = useState<string | null>(null);
@@ -27,7 +29,7 @@ function UploadPage() {
   }
 
   async function handleSubmit() {
-    if (!files.length) return;
+    if (!files.length || !subject) return;
     setBusy(true); setErr(null); setProgress("Uploading files…");
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -43,8 +45,8 @@ function UploadPage() {
         paths.push(path);
       }
       setProgress("Creating evaluation…");
-      const { id } = await createFn({ data: { filePaths: paths } });
-      setProgress("Running OCR and evaluation (this can take 30-90 seconds)…");
+      const { id } = await createFn({ data: { filePaths: paths, subject } });
+      setProgress("Reading your answers and evaluating each question (this can take 1-3 minutes)…");
       await processFn({ data: { id } });
       navigate({ to: "/evaluate/$id", params: { id } });
     } catch (e) {
@@ -52,6 +54,7 @@ function UploadPage() {
       setBusy(false);
     }
   }
+
 
   return (
     <div className="min-h-screen bg-background">
