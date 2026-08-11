@@ -69,7 +69,9 @@ export function MainsAnswersAdmin({ creds }: { creds: Creds }) {
   const [editing, setEditing] = useState<CatalogItem | null>(null);
   const [draft, setDraft] = useState("");
   const [draftQuestion, setDraftQuestion] = useState("");
+  const [draftKeywords, setDraftKeywords] = useState("");
   const [busy, setBusy] = useState<null | "load" | "save" | "gen" | "del">(null);
+
 
   const load = useCallback(() => {
     setLoading(true);
