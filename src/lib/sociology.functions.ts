@@ -107,6 +107,22 @@ export const getSociologyQuestions = createServerFn({ method: "POST" })
     return (rows ?? []) as SociologyQuestion[];
   });
 
+/** A single Sociology PYQ by id, for the question detail page. */
+export const getSociologyQuestion = createServerFn({ method: "POST" })
+  .inputValidator((i: unknown) => z.object({ id: z.string().min(1).max(200) }).parse(i))
+  .handler(async ({ data }) => {
+    const supabase = serverPublicSupabase();
+    const { data: row, error } = await supabase
+      .from("sociology_questions")
+      .select(
+        "id, paper, chapter, chapter_slug, topic, topic_slug, question_text, year, question_number, marks",
+      )
+      .eq("id", data.id)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    return (row ?? null) as SociologyQuestion | null;
+  });
+
 export type SociologyTopperCopy = {
   id: string;
   topper_name: string;

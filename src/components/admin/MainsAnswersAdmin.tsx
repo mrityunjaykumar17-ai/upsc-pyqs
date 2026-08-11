@@ -69,7 +69,9 @@ export function MainsAnswersAdmin({ creds }: { creds: Creds }) {
   const [editing, setEditing] = useState<CatalogItem | null>(null);
   const [draft, setDraft] = useState("");
   const [draftQuestion, setDraftQuestion] = useState("");
+  const [draftKeywords, setDraftKeywords] = useState("");
   const [busy, setBusy] = useState<null | "load" | "save" | "gen" | "del">(null);
+
 
   const load = useCallback(() => {
     setLoading(true);
@@ -122,18 +124,21 @@ export function MainsAnswersAdmin({ creds }: { creds: Creds }) {
     setEditing(item);
     setDraft("");
     setDraftQuestion(item.question);
+    setDraftKeywords("");
     setBusy("load");
     setErr(null);
     try {
       const row = await getAnswer({ data: { ...creds, id: item.id } });
       setDraft(row?.answer_md ?? "");
       if (row?.question_text) setDraftQuestion(row.question_text);
+      setDraftKeywords(Array.isArray(row?.keywords) ? row.keywords.join(", ") : "");
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Could not load the answer");
     } finally {
       setBusy(null);
     }
   }
+
 
   async function handleSave() {
     if (!editing || !draft.trim()) return;
@@ -151,8 +156,14 @@ export function MainsAnswersAdmin({ creds }: { creds: Creds }) {
             question_number: editing.n,
             question_text: draftQuestion.trim() || editing.question,
             answer_md: draft,
+            keywords: draftKeywords
+              .split(",")
+              .map((k) => k.trim())
+              .filter(Boolean)
+              .slice(0, 30),
             source: "manual",
           },
+
         },
       });
       setEditing(null);
@@ -356,6 +367,16 @@ export function MainsAnswersAdmin({ creds }: { creds: Creds }) {
                 className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 font-mono text-xs text-foreground"
               />
             </label>
+            <label className="mt-3 block text-xs text-muted-foreground">
+              Keywords (comma separated — shown to users under the answer)
+              <input
+                value={draftKeywords}
+                onChange={(e) => setDraftKeywords(e.target.value)}
+                placeholder="e.g. cooperative federalism, Article 246, Sarkaria Commission"
+                className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
+              />
+            </label>
+
             <div className="mt-5 flex flex-wrap justify-end gap-2">
               <button
                 onClick={handleDelete}

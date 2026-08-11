@@ -144,7 +144,15 @@ function TopicPage() {
                   {i + 1}
                 </span>
                 <div className="flex-1">
-                  <p className="leading-relaxed text-foreground">{q.question_text}</p>
+                  <Link
+                    to="/sociology/question/$id"
+                    params={{ id: q.id }}
+                    className="group block"
+                  >
+                    <p className="leading-relaxed text-foreground group-hover:text-primary">
+                      {q.question_text}
+                    </p>
+                  </Link>
                   <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
                     {q.year && (
                       <span className="rounded-full bg-secondary px-2.5 py-0.5 font-medium text-secondary-foreground">
@@ -161,6 +169,18 @@ function TopicPage() {
                         {q.marks} marks
                       </span>
                     )}
+                    {(matches[q.id]?.length ?? 0) > 0 && (
+                      <span className="rounded-full bg-secondary px-2.5 py-0.5 font-medium text-secondary-foreground">
+                        {matches[q.id].length} topper copies
+                      </span>
+                    )}
+                    <Link
+                      to="/sociology/question/$id"
+                      params={{ id: q.id }}
+                      className="ml-auto text-xs font-medium text-primary hover:underline"
+                    >
+                      View details →
+                    </Link>
                   </div>
                   <AskAI
                     id={q.id}
@@ -170,13 +190,12 @@ function TopicPage() {
                     paper={`Sociology Optional ${paperLabel}`}
                     subject={`${q.chapter} — ${q.topic}`}
                   />
-                  <SociologyMatches matches={matches[q.id] ?? []} />
-
                 </div>
               </div>
             </li>
           ))}
         </ol>
+
       </main>
     </div>
   );
