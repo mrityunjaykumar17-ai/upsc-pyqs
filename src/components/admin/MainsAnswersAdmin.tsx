@@ -367,6 +367,16 @@ export function MainsAnswersAdmin({ creds }: { creds: Creds }) {
                 className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 font-mono text-xs text-foreground"
               />
             </label>
+            <label className="mt-3 block text-xs text-muted-foreground">
+              Keywords (comma separated — shown to users under the answer)
+              <input
+                value={draftKeywords}
+                onChange={(e) => setDraftKeywords(e.target.value)}
+                placeholder="e.g. cooperative federalism, Article 246, Sarkaria Commission"
+                className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
+              />
+            </label>
+
             <div className="mt-5 flex flex-wrap justify-end gap-2">
               <button
                 onClick={handleDelete}
