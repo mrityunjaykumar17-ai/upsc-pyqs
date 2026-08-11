@@ -44,21 +44,50 @@ function Shell({ children }: { children: React.ReactNode }) {
   );
 }
 
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <div className="text-2xl font-bold text-foreground">{value}</div>
+      <div className="text-xs uppercase tracking-wider text-muted-foreground">{label}</div>
+    </div>
+  );
+}
+
 function SociologyHome() {
   const outline = Route.useLoaderData() as SociologyOutline;
   const [paper, setPaper] = useState(1);
   const active = outline.find((p) => p.paper === paper);
+  const totalQuestions = outline.reduce((a, p) => a + p.total, 0);
+  const totalChapters = outline.reduce((a, p) => a + p.chapters.length, 0);
+  const totalTopics = outline.reduce(
+    (a, p) => a + p.chapters.reduce((b, c) => b + c.topics.length, 0),
+    0,
+  );
 
   return (
     <Shell>
-      <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Sociology Optional PYQs</h1>
-      <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-        Every UPSC Sociology optional question from 2013–2025, arranged chapter-wise and topic-wise
-        exactly as the syllabus is taught. Open a topic for the questions, stored model answers and
-        Sociology topper answer copies.
-      </p>
+      <section className="mb-10">
+        <span className="inline-block rounded-full border border-border bg-secondary/60 px-3 py-1 text-xs font-medium text-muted-foreground">
+          Civil Services Examination · Optional
+        </span>
+        <h1 className="mt-4 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
+          Sociology Optional Previous Year Questions
+        </h1>
+        <p className="mt-4 max-w-2xl text-muted-foreground">
+          Every Sociology question arranged by <strong>Paper → Chapter → Topic</strong>. Open any
+          question for a stored model answer, an AI-tailored answer, and the topper copies that
+          attempted the same question.
+        </p>
+        <div className="mt-6 flex flex-wrap gap-6 text-sm">
+          <Stat label="Papers" value={String(outline.length)} />
+          <Stat label="Chapters" value={String(totalChapters)} />
+          <Stat label="Topics" value={String(totalTopics)} />
+          <Stat label="Questions" value={`${totalQuestions}+`} />
+        </div>
+      </section>
 
-      <div className="mt-6 inline-flex rounded-lg border border-border bg-card p-1 text-sm">
+      <h2 className="mb-4 text-xl font-semibold tracking-tight">Choose a paper</h2>
+      <div className="inline-flex rounded-lg border border-border bg-card p-1 text-sm">
         {outline.map((p) => (
           <button
             key={p.paper}
@@ -75,6 +104,7 @@ function SociologyHome() {
       </div>
 
       <p className="mt-4 text-sm font-medium text-primary">{PAPER_NAMES[paper]}</p>
+
 
       <div className="mt-4 space-y-4">
         {active?.chapters.map((c) => (

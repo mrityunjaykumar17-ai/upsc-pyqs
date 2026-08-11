@@ -20,6 +20,7 @@ import { Route as PrelimsIndexRouteImport } from './routes/prelims.index'
 import { Route as QuestionIdRouteImport } from './routes/question.$id'
 import { Route as GsPaperRouteImport } from './routes/gs.$paper'
 import { Route as GsPaperIndexRouteImport } from './routes/gs.$paper.index'
+import { Route as SociologyQuestionIdRouteImport } from './routes/sociology.question.$id'
 import { Route as PrelimsYearYearRouteImport } from './routes/prelims.year.$year'
 import { Route as PrelimsSubjectSubjectRouteImport } from './routes/prelims.subject.$subject'
 import { Route as PrelimsResultAttemptIdRouteImport } from './routes/prelims.result.$attemptId'
@@ -84,6 +85,11 @@ const GsPaperIndexRoute = GsPaperIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => GsPaperRoute,
+} as any)
+const SociologyQuestionIdRoute = SociologyQuestionIdRouteImport.update({
+  id: '/sociology/question/$id',
+  path: '/sociology/question/$id',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const PrelimsYearYearRoute = PrelimsYearYearRouteImport.update({
   id: '/prelims/year/$year',
@@ -156,6 +162,7 @@ export interface FileRoutesByFullPath {
   '/prelims/result/$attemptId': typeof PrelimsResultAttemptIdRoute
   '/prelims/subject/$subject': typeof PrelimsSubjectSubjectRoute
   '/prelims/year/$year': typeof PrelimsYearYearRoute
+  '/sociology/question/$id': typeof SociologyQuestionIdRoute
   '/gs/$paper/': typeof GsPaperIndexRoute
   '/gs/$paper/$subject/$year': typeof GsPaperSubjectYearRoute
   '/sociology/$paper/$chapter/$topic': typeof SociologyPaperChapterTopicRoute
@@ -176,6 +183,7 @@ export interface FileRoutesByTo {
   '/prelims/result/$attemptId': typeof PrelimsResultAttemptIdRoute
   '/prelims/subject/$subject': typeof PrelimsSubjectSubjectRoute
   '/prelims/year/$year': typeof PrelimsYearYearRoute
+  '/sociology/question/$id': typeof SociologyQuestionIdRoute
   '/gs/$paper': typeof GsPaperIndexRoute
   '/gs/$paper/$subject/$year': typeof GsPaperSubjectYearRoute
   '/sociology/$paper/$chapter/$topic': typeof SociologyPaperChapterTopicRoute
@@ -200,6 +208,7 @@ export interface FileRoutesById {
   '/prelims/result/$attemptId': typeof PrelimsResultAttemptIdRoute
   '/prelims/subject/$subject': typeof PrelimsSubjectSubjectRoute
   '/prelims/year/$year': typeof PrelimsYearYearRoute
+  '/sociology/question/$id': typeof SociologyQuestionIdRoute
   '/gs/$paper/': typeof GsPaperIndexRoute
   '/gs/$paper/$subject/$year': typeof GsPaperSubjectYearRoute
   '/sociology/$paper/$chapter/$topic': typeof SociologyPaperChapterTopicRoute
@@ -224,6 +233,7 @@ export interface FileRouteTypes {
     | '/prelims/result/$attemptId'
     | '/prelims/subject/$subject'
     | '/prelims/year/$year'
+    | '/sociology/question/$id'
     | '/gs/$paper/'
     | '/gs/$paper/$subject/$year'
     | '/sociology/$paper/$chapter/$topic'
@@ -244,6 +254,7 @@ export interface FileRouteTypes {
     | '/prelims/result/$attemptId'
     | '/prelims/subject/$subject'
     | '/prelims/year/$year'
+    | '/sociology/question/$id'
     | '/gs/$paper'
     | '/gs/$paper/$subject/$year'
     | '/sociology/$paper/$chapter/$topic'
@@ -267,6 +278,7 @@ export interface FileRouteTypes {
     | '/prelims/result/$attemptId'
     | '/prelims/subject/$subject'
     | '/prelims/year/$year'
+    | '/sociology/question/$id'
     | '/gs/$paper/'
     | '/gs/$paper/$subject/$year'
     | '/sociology/$paper/$chapter/$topic'
@@ -287,6 +299,7 @@ export interface RootRouteChildren {
   PrelimsResultAttemptIdRoute: typeof PrelimsResultAttemptIdRoute
   PrelimsSubjectSubjectRoute: typeof PrelimsSubjectSubjectRoute
   PrelimsYearYearRoute: typeof PrelimsYearYearRoute
+  SociologyQuestionIdRoute: typeof SociologyQuestionIdRoute
   SociologyPaperChapterTopicRoute: typeof SociologyPaperChapterTopicRoute
 }
 
@@ -368,6 +381,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/gs/$paper/'
       preLoaderRoute: typeof GsPaperIndexRouteImport
       parentRoute: typeof GsPaperRoute
+    }
+    '/sociology/question/$id': {
+      id: '/sociology/question/$id'
+      path: '/sociology/question/$id'
+      fullPath: '/sociology/question/$id'
+      preLoaderRoute: typeof SociologyQuestionIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/prelims/year/$year': {
       id: '/prelims/year/$year'
@@ -498,18 +518,9 @@ const rootRouteChildren: RootRouteChildren = {
   PrelimsResultAttemptIdRoute: PrelimsResultAttemptIdRoute,
   PrelimsSubjectSubjectRoute: PrelimsSubjectSubjectRoute,
   PrelimsYearYearRoute: PrelimsYearYearRoute,
+  SociologyQuestionIdRoute: SociologyQuestionIdRoute,
   SociologyPaperChapterTopicRoute: SociologyPaperChapterTopicRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
