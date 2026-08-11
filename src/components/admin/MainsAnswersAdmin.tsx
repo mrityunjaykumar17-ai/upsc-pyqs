@@ -124,18 +124,21 @@ export function MainsAnswersAdmin({ creds }: { creds: Creds }) {
     setEditing(item);
     setDraft("");
     setDraftQuestion(item.question);
+    setDraftKeywords("");
     setBusy("load");
     setErr(null);
     try {
       const row = await getAnswer({ data: { ...creds, id: item.id } });
       setDraft(row?.answer_md ?? "");
       if (row?.question_text) setDraftQuestion(row.question_text);
+      setDraftKeywords(Array.isArray(row?.keywords) ? row.keywords.join(", ") : "");
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Could not load the answer");
     } finally {
       setBusy(null);
     }
   }
+
 
   async function handleSave() {
     if (!editing || !draft.trim()) return;
@@ -153,8 +156,14 @@ export function MainsAnswersAdmin({ creds }: { creds: Creds }) {
             question_number: editing.n,
             question_text: draftQuestion.trim() || editing.question,
             answer_md: draft,
+            keywords: draftKeywords
+              .split(",")
+              .map((k) => k.trim())
+              .filter(Boolean)
+              .slice(0, 30),
             source: "manual",
           },
+
         },
       });
       setEditing(null);
