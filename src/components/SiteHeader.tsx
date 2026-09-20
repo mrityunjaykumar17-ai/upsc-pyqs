@@ -58,6 +58,9 @@ export function SiteHeader() {
           <Link to="/sociology" className="hover:text-foreground transition-colors">
             Sociology
           </Link>
+          <Link to="/anthropology" className="hover:text-foreground transition-colors">
+            Anthropology
+          </Link>
 
           <Link to="/evaluate" className="hover:text-foreground transition-colors">
             AI Evaluation
