@@ -1,9 +1,17 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
+import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/SiteHeader";
 import { TestRunner } from "@/components/prelims/TestRunner";
 import { getQuestionsBySubject } from "@/lib/prelims.functions";
 
 export const Route = createFileRoute("/prelims/subject/$subject")({
+  ssr: false,
+  beforeLoad: async ({ params }) => {
+    const { data, error } = await supabase.auth.getUser();
+    if (error || !data.user) {
+      throw redirect({ to: "/auth", search: { redirect: `/prelims/subject/${params.subject}` } });
+    }
+  },
   loader: ({ params }) => getQuestionsBySubject({ data: { subject: decodeURIComponent(params.subject) } }),
   errorComponent: ({ error }) => (
     <div className="mx-auto max-w-2xl p-10 text-sm text-destructive">{String(error)}</div>
